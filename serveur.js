@@ -6,24 +6,15 @@ const path = require("path");
 const mysql = require("@mysql/xdevapi");
 
 
-// Gestion de la base de donnée 
+// Constante du serveur 
 
 const DB_config = {
     password : "#Cop1BG69",
     user : "root",
     host : "localhost",
     port : 33060,
-    schema : "Site_Resto"
+    schema : "Site_resto"
 }
-mysql.getSession(DB_config)
-    .then(session =>{
-        return session.getSchema("Site_Resto").getTable('commentateur').count();
-    })
-    .then(count => {
-        console.log(count);
-    })
-
-// Constante du serveur 
 
 const port = 8000;
 
@@ -39,22 +30,35 @@ const MIME_TYPES = {
     svg: "image/svg+xml",
 };
  
-// traitement des requêtes statique du client
+// traitement des requêtes du client
 
 const serveur = http.createServer((req, res) => {
-    let filename = req.url;
-    if (req.url === "/"){
-        filename = "/index.html";
-    }
-    const extension = path.extname(filename).substring(1).toLowerCase();
-    fs.readFile(__dirname + "/site_client" + filename, (err, data) => {
-        if (err) 
-            console.log(`${err}`);
-        else{
-            res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
-            res.end(data);
+    if(req.url.endsWith(".")){   // un "." correspond à une requete à la base de donnée
+        mysql.getSession(DB_config)
+            .then((session) => {
+                session.sql("SElECT nom FROM restaurants")
+                    .execute((row) => {
+                        console.log("Nom: " + row[0]);
+                    })
+            })
+            .catch((err) => {
+                console.log(err);
+            })
+    }else{
+        let filename = req.url;
+        if (req.url === "/"){
+            filename = "/index.html";
         }
-    })
+        const extension = path.extname(filename).substring(1).toLowerCase();
+        fs.readFile(__dirname + "/site_client" + filename, (err, data) => {
+            if (err) 
+                console.log(`${err}`);
+            else{
+                res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
+                res.end(data);
+            }
+        })
+    }
     console.log(`${req.method} ${req.url}`);
 })
 
