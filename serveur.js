@@ -38,38 +38,27 @@ const MIME_TYPES = {
     ico: "image/x-icon",
     svg: "image/svg+xml",
 };
-
-const PATH = path.join(process.cwd(), "./site_client");
-
-const toBool = [() => true, () => false];
-
+ 
 // traitement des requêtes statique du client
 
-const prepareFile = async (url) =>{
-    const Chemin_tab = [PATH, url];
-    if (url.endsWith("/")){
-        Chemin_tab.push("index.html");
+const serveur = http.createServer((req, res) => {
+    let filename = req.url;
+    if (req.url === "/"){
+        filename = "/index.html";
     }
-    const chemin =path.join(...Chemin_tab);
-    const pathTraversal = !chemin.startsWith(PATH);
-    const exists = await fs.promises.access(chemin).then(...toBool);
-    const found = !pathTraversal && exists;
-    const streamPath = found ? chemin : PATH + "/404.html";
-    const ext = path.extname(streamPath).substring(1).toLowerCase();
-    const stream = fs.createReadStream(streamPath);
-    return {found, ext, stream};
-}  
-
-const server = http.createServer(async (req, res) => {
-    const fichier = await prepareFile(req.url);
-    const status = fichier.found ? 200 : 400;
-    const Type = MIME_TYPES[fichier.ext] || MIME_TYPES.default;
-    res.writeHead(status, {"Content-Type" : Type});
-    fichier.stream.pipe(res);
+    const extension = path.extname(filename).substring(1).toLowerCase();
+    fs.readFile(__dirname + "/site_client" + filename, (err, data) => {
+        if (err) 
+            console.log(`${err}`);
+        else{
+            res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
+            res.end(data);
+        }
+    })
     console.log(`${req.method} ${req.url}`);
 })
 
 
-server.listen(port, () => {
+serveur.listen(port, () => {
     console.log(`Le serveur tourne à l'adresse http://localhost:${port}/`);
 });
