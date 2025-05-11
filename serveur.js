@@ -36,10 +36,13 @@ const serveur = http.createServer((req, res) => {
     if(req.url.endsWith(".")){   // un "." correspond à une requete à la base de donnée
         mysql.getSession(DB_config)
             .then((session) => {
-                session.sql("SElECT nom FROM restaurants")
+                res.writeHead(200);
+                session.sql("SElECT * FROM restaurants")
                     .execute((row) => {
-                        console.log("Nom: " + row[0]);
-                    })
+                        let retour = JSON.stringify(row);
+                        res.write(retour);
+                    });
+                res.end();
             })
             .catch((err) => {
                 console.log(err);
