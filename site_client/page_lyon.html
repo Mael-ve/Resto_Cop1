@@ -24,18 +24,13 @@
         <script>
             liste_resto = document.getElementById("resto");
 
-            const xhr = new XMLHttpRequest();
-            xhr.open("GET", "Lyon.");
-            xhr.send();
-            xhr.responseType = "json";
-            xhr.onload = () => {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    const data = xhr.response;
-                    console.log(data.fetchOne);
-                } else {
-                    console.log(`Error: ${xhr.status}`);
-                }
-            };
+            fetch("Lyon.", {method : "GET"})
+                .then((res) =>{
+                    res.json();
+                })
+                .then((json) => {
+                    console.log(json);
+                })
 
         </script>
 

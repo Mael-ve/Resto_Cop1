@@ -1,6 +1,7 @@
 // Importation des modules/Frameworks utiles 
 
 const http = require("http");
+const stream = require("node:stream")
 const fs = require("fs");
 const path = require("path");
 const mysql = require("@mysql/xdevapi");
@@ -38,11 +39,10 @@ const serveur = http.createServer((req, res) => {
             .then((session) => {
                 res.writeHead(200);
                 session.sql("SElECT * FROM restaurants")
-                    .execute((row) => {
-                        let retour = JSON.stringify(row);
-                        res.write(retour);
+                    .execute((row) =>{
+                        res.write(JSON.stringify(row));
                     });
-                res.end();
+                res.end("end");
             })
             .catch((err) => {
                 console.log(err);
