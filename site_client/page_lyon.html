@@ -26,11 +26,15 @@
 
             fetch("Lyon.", {method : "GET"})
                 .then((res) =>{
-                    res.json();
+                    res.json(); 
                 })
-                .then((json) => {
-                    console.log(json);
+                .then((data) =>{
+                    liste_resto.innerHTML = data
                 })
+                .catch(err => {
+                    console.log(err)
+                })
+                
 
         </script>
 
