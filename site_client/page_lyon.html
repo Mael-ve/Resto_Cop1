@@ -18,25 +18,9 @@
         </ul>
         <br>
         <p> Ici les Restaurants Lyonnais :</p>
-        <ul id="resto">
+        <ul id="test">
 
         </ul>
-        <script>
-            liste_resto = document.getElementById("resto");
-
-            fetch("/Lyon.")
-                .then((res) =>{
-                    return res.json();
-                })
-                .then((data) => {
-                    console.log(data);
-                })
-                .catch(err => {
-                    console.log(err);
-                })
-                
-
-        </script>
-
     </body>
+    <script type="text/javascript" src="client.js"></script>
 </html>

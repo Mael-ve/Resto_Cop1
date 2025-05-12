@@ -37,7 +37,7 @@ const MIME_TYPES = {
 const serveur = http.createServer((req, res) => {
     if(req.url.endsWith(".")){   // un "." correspond à une requete à la base de donnée
         connection.query(
-            "SELECT * FROM restaurants WHERE nom ='TAKUMI'", 
+            "SELECT * FROM restaurants", 
             (err, results, field) =>{
             if(err){
                 console.log(err);
@@ -56,7 +56,7 @@ const serveur = http.createServer((req, res) => {
         const extension = path.extname(filename).substring(1).toLowerCase();
         fs.readFile(__dirname + "/site_client" + filename, (err, data) => {
             if (err) 
-                console.log(`${err}`);
+                console.log(err);
             else{
                 res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
                 res.end(data);
