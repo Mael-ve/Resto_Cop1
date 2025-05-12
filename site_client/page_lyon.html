@@ -26,11 +26,13 @@
 
             fetch("/Lyon.")
                 .then((res) =>{
-                    const stream = res.body
-                    stream.getReader() 
+                    return res.json();
+                })
+                .then((data) => {
+                    console.log(data);
                 })
                 .catch(err => {
-                    console.log(err)
+                    console.log(err);
                 })
                 
 

@@ -45,7 +45,7 @@ const serveur = http.createServer((req, res) => {
             else{
                 const retour = JSON.stringify(results);
                 res.writeHead(200);
-                res.end ("Hello World");
+                res.end (retour);
             }
         })
     }else{
