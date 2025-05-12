@@ -24,12 +24,10 @@
         <script>
             liste_resto = document.getElementById("resto");
 
-            fetch("Lyon.", {method : "GET"})
+            fetch("/Lyon.")
                 .then((res) =>{
-                    res.json(); 
-                })
-                .then((data) =>{
-                    liste_resto.innerHTML = data
+                    const stream = res.body
+                    stream.getReader() 
                 })
                 .catch(err => {
                     console.log(err)
