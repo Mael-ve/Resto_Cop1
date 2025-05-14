@@ -1,43 +1,60 @@
 body { 
-    font-family: "Montserrat", sans-serif;	color : white;
-        background-color : #d4bc5b;
+    font-family: "Montserrat", sans-serif;
+    color : white;
+    background-color : #d4bc5b;
+}
+h1 {
+    color: black; 
+    border: 2px solid Black; 
+    background-color:#e0d5a6;
+    padding: 20px;
+    text-align:center;
+    border-radius: 10px;
+}
+
+ul {
+    list-style-type: none;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+        background-color: #e0d5a6;
+    position: sticky;	
+    top:10px;
+    width:100%;
+}
+
+li{ 	 float:left;
+        border-right: 1px solid #bbb;
+}
+
+li a {
+    text-align:center;
+    color:black;
+    display:block;
+    padding: 8px 16px;
+    text-decoration: none;
     }
-    h1 {
-        color: black; 
-        border: 2px solid Black; 
-        background-color:#e0d5a6;
-        padding: 20px;
-        text-align:center;
-        border-radius: 10px;
-    }
-    
-    ul {
-        list-style-type: none;
-        margin:0;
-        padding:0;
-        overflow:hidden;
-          background-color: #e0d5a6;
-        position: sticky;	
-        top:10px;
-        width:100%;
-    }
-    
-    li{ 	 float:left;
-         border-right: 1px solid #bbb;
-    }
-    
-    li a {
-        text-align:center;
-        color:black;
-        display:block;
-        padding: 8px 16px;
-        text-decoration: none;
-        }
-    
-    li a:hover{
-        background-color: #555; 
-        color:white;
-    }
-    
-    .active{
-        background-color:red}
+
+li a:hover{
+    background-color: #555; 
+    color:white;
+}
+
+.active{
+    background-color:red
+}
+
+#titre_page{
+    text-align: center;
+}
+
+#Liste_resto{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.resto{
+    border : 1 px solid black;
+    display: flex;
+    flex-direction: column;
+}
