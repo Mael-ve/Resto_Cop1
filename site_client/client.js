@@ -6,7 +6,7 @@ let liste_resto = [];
 // {nom: "Naanwich'riz", type_resto: "indien", localisation: "7 rue Désirée, au dessus de l’opéra", coup_coeur: 0}
 
 async function get_data(requete){
-    const reponse = await fetch(`/api/get_restos?=${requete}`);
+    const reponse = await fetch(`/api/get_resto?=${requete}`);
     const data = await reponse.json();
     return data;
 }
