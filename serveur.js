@@ -37,7 +37,7 @@ const MIME_TYPES = {
 const serveur = http.createServer((req, res) => {
     if(req.url.endsWith(".")){   // un "." correspond à une requete à la base de donnée
         connection.query(
-            "SELECT * FROM restaurants", 
+            "SELECT nom, type_resto, localisation, coup_coeur FROM restaurants", 
             (err, results, field) =>{
             if(err){
                 console.log(err);
