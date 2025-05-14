@@ -1,11 +1,12 @@
 const liste_restoHTML = document.getElementById("Liste_resto")
+const requeteHTML = document.getElementById("titre_page");
 
 let liste_resto = [];
 // resto à prendre en exemple pour les graphismes (type de renvoie dans un tableau de la requete fetch("/Lyon."))
 // {nom: "Naanwich'riz", type_resto: "indien", localisation: "7 rue Désirée, au dessus de l’opéra", coup_coeur: 0}
 
-async function get_data(){
-    const reponse = await fetch("/Lyon.");
+async function get_data(requete){
+    const reponse = await fetch(`/api/get_restos?=${requete}`);
     const data = await reponse.json();
     return data;
 }
@@ -17,7 +18,7 @@ const addDataHTML = () =>{
             let newResto = document.createElement("div");
             newResto.classList.add('Resto'); // classe de chaque restaurant 
             // forme du resto dans sa grille
-            newResto.innerHTML =`
+            newResto.innerHTML = `
             <h3>${resto.nom}</h3>
             <p>${resto.type_resto}</p>  
             `;
@@ -27,7 +28,8 @@ const addDataHTML = () =>{
 }
 
 const initApp = async () =>{
-    liste_resto = await get_data();
+    const requete = requeteHTML.outerText.toLowerCase(); // recupere le titre de la page 
+    liste_resto = await get_data(requete);
     addDataHTML();
 }
 
