@@ -1,7 +1,7 @@
 form database : 
 
 CREATE TABLE commentateur (
-  	id int(255) unsigned NOT NULL AUTO_INCREMENT,
+  	id int(255) unsigned NOT NULL,
   	pseudo varchar(50),
   	lien_tete varchar(255) DEFAULT NULL,
   	PRIMARY KEY (id)
