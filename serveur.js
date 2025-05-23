@@ -9,6 +9,7 @@ const mysql = require("mysql2");
 
 // Constante du serveur 
 
+// à load dans un fichier externe
 const DB_config = {
     password : "#Cop1BG69",
     user : "root",
@@ -32,14 +33,34 @@ const MIME_TYPES = {
     svg: "image/svg+xml",
 };
 
-const requete_BDD = ["lyon", "paris"];
+const requete_BDD = ["lyon", "paris"]; // utiliser un dico 
+
  
 // traitement des requêtes du client
+
+function requete_api_get_resto(ville, res){
+    connection.query(
+        `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville='${ville}'`, 
+        (err, results, _) =>{
+        if(err){
+            console.log(err);
+            res.writeHead(500);
+            res.end();
+        }
+        else{
+            const retour = JSON.stringify(results);
+            res.writeHead(200);
+            res.end(retour);
+        }
+    })
+}
 
 function return_404(res){
     fs.readFile(__dirname + "/site_client/404.html", (err, data) => {
         if(err){
-            console.log("Normalement impossible, le fichier existe");
+            console.log("fichier 404 n'existe pas", err);
+            res.writeHead(500);
+            res.end();
         }
         else{
             res.writeHead(404);
@@ -48,30 +69,17 @@ function return_404(res){
     })
 }
 
-function IsRequeteBDDValide(url){
-    // cherche si la requete est une requete à la base de donnée
-    return url.split(/\/api\/get_resto\?=/)
-            .some((mot) => {return requete_BDD.indexOf(mot) > -1});
-}
+// serveur qui toune au port 8000 
+
+const regex_api = /\/(.*)\/(.*)\?(.*)=(.*)/
 
 const serveur = http.createServer((req, res) => {
-    if(IsRequeteBDDValide(req.url)){  // regarde si la requete est une requete à la base de donnée
-        const ville = req.url.split(/\/api\/get_resto\?=/)[1];
-        connection.query(
-            `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville='${ville}'`, 
-            (err, results, field) =>{
-            if(err){
-                console.log(err);
-            }
-            else{
-                const retour = JSON.stringify(results);
-                res.writeHead(200);
-                res.end(retour);
-            }
-        })
+    const requete = req.url.match(regex_api);
+    if(requete != null){  // regarde si la requete est une requete api
+        requete_api_get_resto(requete[4], res); // pour l'instant seul requte d'api valide
     }else{
         let filename = req.url;
-        if(!filename.match(/\.\./)){
+        if(!filename.match(/\.\./)){ // match("..") ne fonctionne pas
             if (filename === "/"){
                 filename = "/index.html";
             }
@@ -91,5 +99,5 @@ const serveur = http.createServer((req, res) => {
 
 
 serveur.listen(port, () => {
-    console.log(`Le serveur tourne à l'adresse http://localhost:${port}/`);
+    console.log(`Le serveur tourne au port ${port}`);
 });

@@ -18,3 +18,9 @@ CREATE table restaurants (
 	prix TEXT,
 	PRIMARY KEY (nom)
 )
+
+requete traité par le serveur : 
+	- requete pour avoir les resto d'une ville precisé dans le titre de la page demandé
+	/api/get_resto?ville="une ville de la bdd" 
+
+	-toutes les demandes de page contenu dans /site_client
