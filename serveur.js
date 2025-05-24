@@ -1,5 +1,6 @@
 // Importation des modules/Frameworks utiles 
 
+const bdd = require("./access_bdd.js");
 const http = require("http");
 const stream = require("node:stream")
 const fs = require("fs");
@@ -9,15 +10,7 @@ const mysql = require("mysql2");
 
 // Constante du serveur 
 
-// à load dans un fichier externe
-const DB_config = {
-    password : "#Cop1BG69",
-    user : "root",
-    host : "localhost",
-    database : "Site_Resto"
-}
-
-const connection = mysql.createConnection(DB_config);
+const connection = mysql.createConnection(bdd.DB_config);
 
 const port = 8000;
 
