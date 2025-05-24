@@ -38,6 +38,37 @@ const requete_BDD = ["lyon", "paris"]; // utiliser un dico
  
 // traitement des requêtes du client
 
+function return_404(res){
+    fs.readFile(__dirname + "/site_client/404.html", (err, data) => {
+        if(err){
+            console.log("fichier 404 n'existe pas", err);
+            res.writeHead(500);
+            res.end();
+        }
+        else{
+            res.writeHead(404);
+            res.end(data);
+        }
+    })
+}
+
+function retourne_page_client(url, res){
+    if(!url.match(/\.\./)){ // match("..") ne fonctionne pas, vérfie s'il n'y pas /.. dans l'url pour la sécurité
+        if (url === "/"){
+            url = "/index.html";
+        }
+        const extension = path.extname(url).substring(1).toLowerCase(); // retourne l'extension du fichier cherché
+        fs.readFile(__dirname + "/site_client" + url, (err, data) => {
+            if (err) 
+                return_404(res);
+            else{
+                res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
+                res.end(data);
+            }
+        })
+    }
+}
+
 function requete_api_get_resto(ville, res){
     connection.query(
         `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville='${ville}'`, 
@@ -55,44 +86,16 @@ function requete_api_get_resto(ville, res){
     })
 }
 
-function return_404(res){
-    fs.readFile(__dirname + "/site_client/404.html", (err, data) => {
-        if(err){
-            console.log("fichier 404 n'existe pas", err);
-            res.writeHead(500);
-            res.end();
-        }
-        else{
-            res.writeHead(404);
-            res.end(data);
-        }
-    })
-}
-
 // serveur qui toune au port 8000 
 
 const regex_api = /\/(.*)\/(.*)\?(.*)=(.*)/
 
 const serveur = http.createServer((req, res) => {
     const requete = req.url.match(regex_api);
-    if(requete != null){  // regarde si la requete est une requete api
+    if(requete != null){  // regarde si la requete est une requete api (requete à un serveur externe, ici serveur de base de donnée)
         requete_api_get_resto(requete[4], res); // pour l'instant seul requte d'api valide
     }else{
-        let filename = req.url;
-        if(!filename.match(/\.\./)){ // match("..") ne fonctionne pas
-            if (filename === "/"){
-                filename = "/index.html";
-            }
-            const extension = path.extname(filename).substring(1).toLowerCase();
-            fs.readFile(__dirname + "/site_client" + filename, (err, data) => {
-                if (err) 
-                    return_404(res);
-                else{
-                    res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
-                    res.end(data);
-                }
-            })
-        }
+        retourne_page_client(req.url, res);
     }
     console.log(`${req.method} ${req.url}`);
 })
