@@ -1,5 +1,6 @@
 // Importation des modules/Frameworks utiles 
 
+const url = require("node:url");
 const bdd = require("./access_bdd.js");
 const http = require("http");
 const stream = require("node:stream")
@@ -45,24 +46,31 @@ function return_404(res){
     })
 }
 
-function retourne_page_client(url, res){
-    if(!url.match(/\.\./)){ // match("..") ne fonctionne pas, vérfie s'il n'y pas /.. dans l'url pour la sécurité
-        if (url === "/"){
-            url = "/index.html";
+async function retourne_page_client(URL, res){
+    let chemin = URL.pathname;
+    if(!chemin.match(/\.\./)){ // match("..") ne fonctionne pas, vérfie s'il n'y pas /.. dans l'url pour la sécurité
+        if (chemin === "/"){ 
+            chemin = "/index.html";
         }
-        const extension = path.extname(url).substring(1).toLowerCase(); // retourne l'extension du fichier cherché
-        fs.readFile(__dirname + "/site_client" + url, (err, data) => {
+        const extension = path.extname(chemin).substring(1).toLowerCase(); // retourne l'extension du fichier cherché
+        fs.readFile(__dirname + "/site_client" + chemin, "utf-8", (err, data) => {
             if (err) 
                 return_404(res);
             else{
+                let retour = data;
                 res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
-                res.end(data);
+                const modif = URL.query.ville
+                if(modif != null){
+                    retour = retour.replace(/{{ville}}/g, modif.toUpperCase());
+                }
+                res.write(retour);
+                res.end();
             }
         })
     }
 }
 
-function requete_api_get_resto(ville, res){
+ async function requete_api_get_resto(ville, res){
     connection.query(
         `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville='${ville}'`, 
         (err, results, _) =>{
@@ -81,14 +89,15 @@ function requete_api_get_resto(ville, res){
 
 // serveur qui toune au port 8000 
 
-const regex_api = /\/(.*)\/(.*)\?(.*)=(.*)/
+const regex_api = /\/(.*)\/(.*)\?(.*)=(.*)/;
 
-const serveur = http.createServer((req, res) => {
-    const requete = req.url.match(regex_api);
-    if(requete != null){  // regarde si la requete est une requete api (requete à un serveur externe, ici serveur de base de donnée)
-        requete_api_get_resto(requete[4], res); // pour l'instant seul requte d'api valide
+const serveur = http.createServer(async (req, res) => {
+    const requete_api = req.url.match(regex_api);
+    if(requete_api != null){  // regarde si la requete est une requete api (requete à un serveur externe, ici serveur de base de donnée)
+        await requete_api_get_resto(requete_api[4], res); // pour l'instant seul requte d'api valide
     }else{
-        retourne_page_client(req.url, res);
+        const URL =url.parse(req.url, true);
+        await retourne_page_client(URL, res);
     }
     console.log(`${req.method} ${req.url}`);
 })

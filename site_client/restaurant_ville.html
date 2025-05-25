@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
-        <title>Resto De Lyon</title> 
+        <title>Resto De {{ville}}</title> 
         <!-- {{Ville}} -->
     </head>
     <body>
@@ -13,13 +13,13 @@
 
         <ul> 
             <li><a href = "page_Lyon.html"> Nouveautés </a> </li>
-            <li><a href = "page_lyon.html"> Lyon </a> </li>
-            <li><a href = "paris.html"> Paris </a> </li>
+            <li><a href = "restaurant_ville.html?ville=lyon"> Lyon </a> </li>
+            <li><a href = "restaurant_ville.html?ville=paris"> Paris </a> </li>
             <li style="float:right"><a href = "recherche.html"> Recherche </a> </li>
         </ul>
         <br>
         <div id="titre_page">
-            <h2>LYON</h2>
+            <h2>{{ville}}</h2>
         </div>
         <div id="Liste_resto">
         </div>

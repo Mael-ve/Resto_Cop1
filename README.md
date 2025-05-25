@@ -24,3 +24,7 @@ requete traité par le serveur :
 	/api/get_resto?ville="une ville de la bdd" 
 
 	-toutes les demandes de page contenu dans /site_client
+
+
+contraintes actuelles : 
+	- Pour l'instant on travaille sur un nombre fini de ville (Lyon + Paris)
