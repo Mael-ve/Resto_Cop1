@@ -16,7 +16,7 @@ const addDataHTML = () =>{
     if(liste_resto.length > 0){
         liste_resto.forEach(resto => {
             let newResto = document.createElement("div");
-            newResto.classList.add('Resto'); // classe de chaque restaurant 
+            newResto.classList.add('resto'); // classe de chaque restaurant 
             // forme du resto dans sa grille
             newResto.innerHTML = `
             <h3>${resto.nom}</h3>

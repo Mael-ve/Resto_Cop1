@@ -53,14 +53,14 @@ async function retourne_page_client(URL, res){
             chemin = "/index.html";
         }
         const extension = path.extname(chemin).substring(1).toLowerCase(); // retourne l'extension du fichier cherché
-        fs.readFile(__dirname + "/site_client" + chemin, "utf-8", (err, data) => {
+        fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) => {
             if (err) 
                 return_404(res);
             else{
                 let retour = data;
                 res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
                 const modif = URL.query.ville
-                if(modif != null){
+                if(modif != null && extension === "html"){
                     retour = retour.replace(/{{ville}}/g, modif.toUpperCase());
                 }
                 res.write(retour);
@@ -94,7 +94,7 @@ const regex_api = /\/(.*)\/(.*)\?(.*)=(.*)/;
 const serveur = http.createServer(async (req, res) => {
     const requete_api = req.url.match(regex_api);
     if(requete_api != null){  // regarde si la requete est une requete api (requete à un serveur externe, ici serveur de base de donnée)
-        await requete_api_get_resto(requete_api[4], res); // pour l'instant seul requte d'api valide
+        await requete_api_get_resto(requete_api[4], res); // pour l'instant seul requete d'api valide
     }else{
         const URL =url.parse(req.url, true);
         await retourne_page_client(URL, res);
