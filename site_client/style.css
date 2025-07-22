@@ -1,8 +1,11 @@
+/* Fond des page */
 body { 
     font-family: "Montserrat", sans-serif;
     color : white;
     background-color : #d4bc5b;
 }
+
+/* Titre */
 h1 {
     color: black; 
     border: 2px solid Black; 
@@ -12,7 +15,12 @@ h1 {
     border-radius: 10px;
 }
 
-ul {
+#titre_page{
+    text-align: center;
+}
+
+/* Bandeau de menu */
+ul#menu {
     list-style-type: none;
     margin:0;
     padding:0;
@@ -23,11 +31,11 @@ ul {
     width:100%;
 }
 
-li{ 	 float:left;
+li.sous_menu{ 	 float:left;
         border-right: 1px solid #bbb;
 }
 
-li a {
+li.sous_menu a {
     text-align:center;
     color:black;
     display:block;
@@ -35,19 +43,13 @@ li a {
     text-decoration: none;
     }
 
-li a:hover{
+li.sous_menu a:hover{
     background-color: #555; 
     color:white;
 }
 
-.active{
-    background-color:red
-}
 
-#titre_page{
-    text-align: center;
-}
-
+/* Affichage de la liste des resto proposés */
 #Liste_resto{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -64,3 +66,31 @@ li a:hover{
     text-align: center;
 } 
 
+
+/* Formulaire des nouveaux resto  */
+form{
+    margin: 0 auto;
+    width: 500px;
+    padding: 1em;
+    border: 1px solid #ccc;
+    border-radius: 1em;
+}
+
+ul#form{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+textarea{
+    vertical-align: top;
+    height: 5em;
+    resize: vertical;
+
+    font: 1em sans-serif;
+}
+
+
+button{
+    margin-left: 0.5em;
+}

@@ -7,36 +7,12 @@
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	</head>
+
+	<!-- page de login -->
+
 	<body>
 		<h1> LE TRIPADVISOR DES COPAINS </h1>
-		<ul> 
-			<li><a href = "site.html"> Nouveautés </a> </li>
-			<li><a href = "restaurant_ville.html?ville=lyon"> Lyon </a> </li>
-			<li><a href = "restaurant_ville.html?ville=paris"> Paris </a> </li>
-			<li style="float:right"><a href = "recherche.html"> Recherche </a> </li>
-		</ul>
-
-		<p> Les restaus les plus proches de chez toi : </p>
-		<button onclick=localiser()> Lets go </button> 
-		<p id="afficher"></p>
-
-		<script> 
-			const x = document.getElementById("afficher"); 
-			
-			function localiser(){
-				if(navigator.geolocation){
-					navigator.geolocation.getCurrentPosition(success, error);}
-				else{
-					x.innerHTML = " ça marche pas sur ce navigateur sorry";}
-			}
-			
-			function success(position){
-				x.innerHTML = "Latitude : " + position.coords.latitude + "<br>Longitude: "+position.coords.longitude; 
-			}
-			
-			function error(){
-			alert("pas de position disponible"); 
-			}
-		</script>
+		
+		
 	</body>
 </html>
