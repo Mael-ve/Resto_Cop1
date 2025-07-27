@@ -69,9 +69,9 @@ li.sous_menu a:hover{
 
 /* Formulaire des nouveaux resto  */
 form{
-    margin: 0 auto;
+    margin: 3em auto;
     width: 500px;
-    padding: 1em;
+    padding: 2em;
     border: 1px solid #ccc;
     border-radius: 1em;
 }
@@ -86,11 +86,9 @@ textarea{
     vertical-align: top;
     height: 5em;
     resize: vertical;
-
     font: 1em sans-serif;
 }
 
-
 button{
-    margin-left: 0.5em;
+    margin: 1em;
 }

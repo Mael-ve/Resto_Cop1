@@ -32,6 +32,48 @@ const requete_BDD = ["lyon", "paris"]; // utiliser un dico
  
 // traitement des requêtes du client
 
+async function requete_get_resto(URL, res){
+    const ville = URL.query.ville
+    connection.query(
+        `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville='${ville}'`, 
+        (err, results, _) =>{
+        if(err){
+            console.log(err);
+            res.writeHead(500);
+            res.end();
+        }
+        else{
+            const retour = JSON.stringify(results);
+            res.writeHead(200);
+            res.end(retour);
+        }
+    })
+}
+
+async function requete_add_resto(URL, res){
+    connection.query(
+        `INSERT INTO restaurants VALUES(
+            ${URL.query.nom_resto},
+            ${URL.query.type_resto},
+            ${URL.query.adresse},
+            ${URL.query.ville}, 
+            1,
+            ${URL.query.coup_coeur},
+            ${URL.query.commentaire},
+            ${URL.query.prix} )`,
+        (err, results, _) =>{
+        if(err){
+            console.log(err);
+            res.writeHead(500);
+            res.end();
+        }
+        else{
+            res.writeHead(200);
+            res.end();
+        }
+    })
+}
+
 function return_404(res){
     fs.readFile(__dirname + "/site_client/404.html", (err, data) => {
         if(err){
@@ -70,33 +112,17 @@ async function retourne_page_client(URL, res){
     }
 }
 
- async function requete_api_get_resto(ville, res){
-    connection.query(
-        `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville='${ville}'`, 
-        (err, results, _) =>{
-        if(err){
-            console.log(err);
-            res.writeHead(500);
-            res.end();
-        }
-        else{
-            const retour = JSON.stringify(results);
-            res.writeHead(200);
-            res.end(retour);
-        }
-    })
-}
-
 // serveur qui toune au port 8000 
 
-const regex_api = /\/(.*)\/(.*)\?(.*)=(.*)/;
-
 const serveur = http.createServer(async (req, res) => {
-    const requete_api = req.url.match(regex_api);
-    if(requete_api != null){  // regarde si la requete est une requete api (requete à un serveur externe, ici serveur de base de donnée)
-        await requete_api_get_resto(requete_api[4], res); // pour l'instant seul requete d'api valide
+    const URL= url.parse(req.url);
+    if(URL.query != null){
+        if(res.method == 'GET'){
+            await requete_get_resto(URL, res); 
+        }else{
+            await requete_add_resto(URL, res);
+        }
     }else{
-        const URL =url.parse(req.url, true);
         await retourne_page_client(URL, res);
     }
     console.log(`${req.method} ${req.url}`);
