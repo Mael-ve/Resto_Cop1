@@ -7,6 +7,7 @@ const stream = require("node:stream")
 const fs = require("fs");
 const path = require("path");
 const mysql = require("mysql2");
+const querystring = require('querystring');
 
 
 // Constante du serveur 
@@ -88,24 +89,28 @@ function return_404(res){
     })
 }
 
-async function retourne_page_client(URL, res){
+async function retourne_page_client_statique(URL, res){
     let chemin = URL.pathname;
     if(!chemin.match(/\.\./)){ // match("..") ne fonctionne pas, vérfie s'il n'y pas /.. dans l'url pour la sécurité
         if (chemin === "/"){ 
             chemin = "/index.html";
         }
+
         const extension = path.extname(chemin).substring(1).toLowerCase(); // retourne l'extension du fichier cherché
-        fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) => {
+        let chemin_abs = "";
+        if(extension === 'ico' || extension === 'png'){
+            chemin_abs = __dirname + "/site_client/favicon_io" + chemin;
+        }
+        else{
+            chemin_abs = __dirname + "/site_client" + chemin;
+        }
+
+        fs.readFile(chemin_abs, (err, data) => {
             if (err) 
                 return_404(res);
             else{
-                let retour = data;
                 res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
-                const modif = URL.query.ville
-                if(modif != null && extension === "html"){
-                    retour = retour.replace(/{{ville}}/g, modif.toUpperCase());
-                }
-                res.write(retour);
+                res.write(data);
                 res.end();
             }
         })
@@ -117,13 +122,13 @@ async function retourne_page_client(URL, res){
 const serveur = http.createServer(async (req, res) => {
     const URL= url.parse(req.url);
     if(URL.query != null){
-        if(res.method == 'GET'){
-            await requete_get_resto(URL, res); 
+        if(URL.path.endsWith("/ajout_resto.html")){
+            await requete_add_resto(URL, res); 
         }else{
-            await requete_add_resto(URL, res);
+            await requete_get_resto(URL, res);
         }
     }else{
-        await retourne_page_client(URL, res);
+        await retourne_page_client_statique(URL, res);
     }
     console.log(`${req.method} ${req.url}`);
 })
