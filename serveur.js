@@ -34,7 +34,7 @@ const requete_BDD = ["lyon", "paris"]; // utiliser un dico
 // traitement des requêtes du client
 
 async function requete_get_resto(URL, res){
-    const ville = URL.query.ville
+    const ville = querystring.parse(URL.query).ville;
     connection.query(
         `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville='${ville}'`, 
         (err, results, _) =>{
@@ -52,16 +52,9 @@ async function requete_get_resto(URL, res){
 }
 
 async function requete_add_resto(URL, res){
+    const request = querystring.parse(URL.query);
     connection.query(
-        `INSERT INTO restaurants VALUES(
-            ${URL.query.nom_resto},
-            ${URL.query.type_resto},
-            ${URL.query.adresse},
-            ${URL.query.ville}, 
-            1,
-            ${URL.query.coup_coeur},
-            ${URL.query.commentaire},
-            ${URL.query.prix} )`,
+        `INSERT INTO restaurants VALUES("${request.nom_resto}", "${request.type_resto}", "${request.adresse}","${request.ville}", 1, ${request.coup_coeur === null}, "${request.commentaire}", "${request.prix}" )`,
         (err, results, _) =>{
         if(err){
             console.log(err);
@@ -69,6 +62,7 @@ async function requete_add_resto(URL, res){
             res.end();
         }
         else{
+            //retourne_page_client_statique("/ajout_resto.html", res);
             res.writeHead(200);
             res.end();
         }
@@ -88,6 +82,26 @@ function return_404(res){
         }
     })
 }
+
+async function retourne_page_client_dynamique(URL, res){
+    const chemin = URL.pathname;
+    if(!chemin.match(/\.\./)){
+        const extension = path.extname(chemin).substring(1).toLowerCase();
+        fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) =>{
+            if(err){
+                return_404(res);
+            }else{
+                let retour = data;
+                res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
+                const modif = querystring.parse(URL.query).ville;
+                retour = retour.replace(/{{ville}}/g, modif.toUpperCase());
+                res.write(retour);
+                res.end();
+            }
+        })
+    }
+}
+
 
 async function retourne_page_client_statique(URL, res){
     let chemin = URL.pathname;
@@ -122,10 +136,15 @@ async function retourne_page_client_statique(URL, res){
 const serveur = http.createServer(async (req, res) => {
     const URL= url.parse(req.url);
     if(URL.query != null){
-        if(URL.path.endsWith("/ajout_resto.html")){
-            await requete_add_resto(URL, res); 
+        if(URL.pathname.includes("/api/")){
+            await requete_get_resto(URL, res); 
         }else{
-            await requete_get_resto(URL, res);
+            if(URL.pathname === "/ajout_resto.html"){
+                await requete_add_resto(URL, res);
+            }
+            else{
+                await retourne_page_client_dynamique(URL, res);
+            }
         }
     }else{
         await retourne_page_client_statique(URL, res);
