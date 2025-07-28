@@ -62,9 +62,7 @@ async function requete_add_resto(URL, res){
             res.end();
         }
         else{
-            //retourne_page_client_statique("/ajout_resto.html", res);
-            res.writeHead(200);
-            res.end();
+            retourne_page_client_statique("/ajout_resto.html", res);
         }
     })
 }
@@ -103,8 +101,7 @@ async function retourne_page_client_dynamique(URL, res){
 }
 
 
-async function retourne_page_client_statique(URL, res){
-    let chemin = URL.pathname;
+async function retourne_page_client_statique(chemin, res){
     if(!chemin.match(/\.\./)){ // match("..") ne fonctionne pas, vérfie s'il n'y pas /.. dans l'url pour la sécurité
         if (chemin === "/"){ 
             chemin = "/index.html";
@@ -147,7 +144,7 @@ const serveur = http.createServer(async (req, res) => {
             }
         }
     }else{
-        await retourne_page_client_statique(URL, res);
+        await retourne_page_client_statique(URL.pathname, res);
     }
     console.log(`${req.method} ${req.url}`);
 })
