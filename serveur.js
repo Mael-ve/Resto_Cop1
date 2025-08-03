@@ -30,6 +30,8 @@ const MIME_TYPES = {
 
 const requete_BDD = ["lyon", "paris"]; // utiliser un dico 
 
+
+
  
 // traitement des requêtes du client
 
@@ -63,6 +65,25 @@ async function requete_add_resto(URL, res){
         }
         else{
             retourne_page_client_statique("/ajout_resto.html", res);
+        }
+    })
+}
+
+function verification_identification(URL, res){
+    const request = querystring.parse(URL.query);
+    connection.query(`SELECT mot_passe FROM commentateur where pseudo='${request.username}'`, (err, results, _)=>{
+        if(err){
+            console.log(err);
+            res.writeHead(500);
+            res.end();
+        }
+        else{
+            if(results[0].mot_passe === request.mdp){
+                retourne_page_client_statique("/ajout_resto.html", res);
+            }
+            else{
+                return_404(res);
+            }
         }
     })
 }
@@ -140,11 +161,21 @@ const serveur = http.createServer(async (req, res) => {
                 await requete_add_resto(URL, res);
             }
             else{
-                await retourne_page_client_dynamique(URL, res);
+                if(URL.pathname === "/connexion.html"){
+                    await verification_identification(URL, res);
+                }
+                else{
+                    await retourne_page_client_dynamique(URL, res);
+                }
             }
         }
     }else{
-        await retourne_page_client_statique(URL.pathname, res);
+        if(URL.pathname === "/ajout_resto.html"){
+            await retourne_page_client_statique("/connexion.html", res);
+        }
+        else{
+            await retourne_page_client_statique(URL.pathname, res);
+        }
     }
     console.log(`${req.method} ${req.url}`);
 })
