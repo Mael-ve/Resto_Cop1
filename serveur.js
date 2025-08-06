@@ -1,18 +1,24 @@
 // Importation des modules/Frameworks utiles 
 
 const url = require("node:url");
-const bdd = require("./access_bdd.js");
+const bdd = require("./access_bdd.json");
 const http = require("http");
 const stream = require("node:stream")
 const fs = require("fs");
 const path = require("path");
-const mysql = require("mysql2");
+const mariadb = require("mariadb");
 const querystring = require('querystring');
 
 
 // Constante du serveur 
-
-const connection = mysql.createConnection(bdd.DB_config);
+let connection = null;
+(async () => {
+    connection = await mariadb.createConnection({
+    user : bdd.user,
+    host : bdd.host,
+    password : bdd.password,
+    database : bdd.database
+})})()
 
 const port = 8000;
 
@@ -35,36 +41,31 @@ const requete_BDD = ["lyon", "paris"]; // utiliser un dico
 
 async function requete_get_resto(URL, res){
     const ville = querystring.parse(URL.query).ville;
-    connection.query(
-        `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville='${ville}'`, 
-        (err, results, _) =>{
-        if(err){
-            console.log(err);
-            res.writeHead(500);
-            res.end();
-        }
-        else{
-            const retour = JSON.stringify(results);
-            res.writeHead(200);
-            res.end(retour);
-        }
-    })
+    try{
+        const results = await connection.query(`SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="${ville}"`);
+        res.writeHead(200);
+        res.end(JSON.stringify(results));
+    }
+    catch (err){
+        console.log(err);
+        res.writeHead(500);
+        res.end();
+    }
 }
 
 async function requete_add_resto(URL, res){
     const request = querystring.parse(URL.query);
-    connection.query(
+    try{
+        await connection.query(
         `INSERT INTO restaurants VALUES("${request.nom_resto}", "${request.type_resto}", "${request.adresse}","${request.ville}", 1, ${request.coup_coeur === null}, "${request.commentaire}", "${request.prix}" )`,
-        (err, results, _) =>{
-        if(err){
-            console.log(err);
-            res.writeHead(500);
-            res.end();
-        }
-        else{
-            retourne_page_client_statique("/ajout_resto.html", res);
-        }
-    })
+        );
+        retourne_page_client_statique("/ajout_resto.html", res);
+    }
+    catch(err){
+        console.log(err);
+        res.writeHead(500);
+        res.end();
+    }
 }
 
 function return_404(res){
