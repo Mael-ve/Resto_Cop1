@@ -20,7 +20,7 @@ let connection = null;
     database : bdd.database
 })})()
 
-const port = 8000;
+const port = 8889;
 
 const MIME_TYPES = {
     default: "application/octet-stream",
