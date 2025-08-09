@@ -34,9 +34,9 @@ const MIME_TYPES = {
     svg: "image/svg+xml",
 };
 
-const requete_BDD = ["lyon", "paris"]; // utiliser un dico 
-
-
+const requete_securisée = {
+    "/ajout_resto.html": (URL, res) => {requete_add_resto(URL, res);}
+}; 
 
  
 // traitement des requêtes du client
@@ -55,7 +55,8 @@ async function requete_get_resto(URL, res){
     }
 }
 
-async function requete_add_resto(URL, res){
+async function requete_add_resto(URL, res){ 
+    console.log("bon appel");
     const request = querystring.parse(URL.query);
     try{
         await connection.query(
@@ -154,28 +155,21 @@ async function retourne_page_client_statique(chemin, res){
 
 const serveur = http.createServer(async (req, res) => {
     const URL= url.parse(req.url);
-    if(URL.query != null){
-        if(URL.pathname.includes("/api/")){
-            await requete_get_resto(URL, res); 
-        }else{
-            if(URL.pathname === "/ajout_resto.html"){
-                await requete_add_resto(URL, res);
-            }
-            else{
-                if(URL.pathname === "/connexion.html"){
-                    await verification_identification(URL, res);
-                }
-                else{
-                    await retourne_page_client_dynamique(URL, res);
-                }
-            }
-        }
+    if(req.method === 'post'){
+        res.writeHead(200);
+        res.end();
     }else{
-        if(URL.pathname === "/ajout_resto.html"){
-            await retourne_page_client_statique("/connexion.html", res);
+        if(URL.pathname.includes("/api/")){
+            await requete_get_resto(URL, res);
         }
         else{
-            await retourne_page_client_statique(URL.pathname, res);
+            if(URL.query != null){
+                await retourne_page_client_dynamique(URL, res);
+            }
+            else{
+                await retourne_page_client_statique(URL.pathname, res); 
+            }
+
         }
     }
     console.log(`${req.method} ${req.url}`);
