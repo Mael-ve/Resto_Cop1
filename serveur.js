@@ -36,12 +36,13 @@ const MIME_TYPES = {
 
 const requete_securisée = {
     "/ajout_resto.html": (URL, res) => {requete_add_resto(URL, res);}
-}; 
+}; // test de Mael
 
  
 // traitement des requêtes du client
 
 async function requete_get_resto(URL, res){
+    //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
     const ville = querystring.parse(URL.query).ville;
     try{
         const results = await connection.query(`SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="${ville}"`);
@@ -56,7 +57,7 @@ async function requete_get_resto(URL, res){
 }
 
 async function requete_add_resto(URL, res){ 
-    console.log("bon appel");
+    //fonction qui traite la requete url et ajoute le restaurant à la base de donnée
     const request = querystring.parse(URL.query);
     try{
         await connection.query(
@@ -72,6 +73,7 @@ async function requete_add_resto(URL, res){
 }
 
 function verification_identification(URL, res){
+    //focntion qui verifie l'authentification d'un utilisateur
     const request = querystring.parse(URL.query);
     connection.query(`SELECT mot_passe FROM commentateur where pseudo='${request.username}'`, (err, results, _)=>{
         if(err){
@@ -91,6 +93,7 @@ function verification_identification(URL, res){
 }
 
 function return_404(res){
+    //retourne le fichier d'erreur 404
     fs.readFile(__dirname + "/site_client/404.html", (err, data) => {
         if(err){
             console.log("fichier 404 n'existe pas", err);
@@ -105,10 +108,11 @@ function return_404(res){
 }
 
 async function retourne_page_client_dynamique(URL, res){
+    //traite la demande d'une page html en replaçant dans la page {{ville}} par la ville demander dans URL.query
     const chemin = URL.pathname;
     if(!chemin.match(/\.\./)){
         const extension = path.extname(chemin).substring(1).toLowerCase();
-        fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) =>{
+        fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) =>{ // les fichiers pour pouvoir être modifier doivent etre ouvert en binary
             if(err){
                 return_404(res);
             }else{
@@ -125,14 +129,15 @@ async function retourne_page_client_dynamique(URL, res){
 
 
 async function retourne_page_client_statique(chemin, res){
-    if(!chemin.match(/\.\./)){ // match("..") ne fonctionne pas, vérfie s'il n'y pas /.. dans l'url pour la sécurité
+    //retourne un fichier demandé par le chemin
+    if(!chemin.match(/\.\./)){ //vérfie s'il n'y pas /.. dans l'url pour la sécurité
         if (chemin === "/"){ 
             chemin = "/index.html";
         }
 
         const extension = path.extname(chemin).substring(1).toLowerCase(); // retourne l'extension du fichier cherché
         let chemin_abs = "";
-        if(extension === 'ico' || extension === 'png'){
+        if(extension === 'ico' || extension === 'png'){ 
             chemin_abs = __dirname + "/site_client/favicon_io" + chemin;
         }
         else{
@@ -155,15 +160,15 @@ async function retourne_page_client_statique(chemin, res){
 
 const serveur = http.createServer(async (req, res) => {
     const URL= url.parse(req.url);
-    if(req.method === 'post'){
+    if(req.method === 'post'){ //si la requete est de type post -> c'est la demande de connexion
         res.writeHead(200);
         res.end();
     }else{
-        if(URL.pathname.includes("/api/")){
+        if(URL.pathname.includes("/api/")){ //requete à la base de donnée
             await requete_get_resto(URL, res);
         }
         else{
-            if(URL.query != null){
+            if(URL.query != null){ // si y'a une query c'est une page où l'on doit modifier le code html coté serveur
                 await retourne_page_client_dynamique(URL, res);
             }
             else{
