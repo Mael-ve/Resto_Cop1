@@ -1,6 +1,6 @@
 async function verifie_cookie(){
     const est_bon_token = await fetch("/ajout_resto.html", {method : 'POST', body : document.cookie});
-    return (est_bon_token === "true")
+    return (est_bon_token === "true");
 }
 
 function init_connexion(){

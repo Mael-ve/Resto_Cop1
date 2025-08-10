@@ -60,11 +60,20 @@ async function requete_get_resto(URL, res){
 }
 
 async function requete_add_resto(URL, res){ 
-    //fonction qui traite la requete url et ajoute le restaurant à la base de donnée
+    //fonction qui traite la requete url contenant un restaurant et ajoute le restaurant à la base de donnée
     const request = querystring.parse(URL.query);
     try{
         await connection.query(
-        `INSERT INTO restaurants VALUES("${request.nom_resto}", "${request.type_resto}", "${request.adresse}","${request.ville}", 1, ${request.coup_coeur === null}, "${request.commentaire}", "${request.prix}" )`,
+        `INSERT INTO restaurants VALUES(
+        "${request.nom_resto}",
+        "${request.type_resto}",
+        "${request.adresse}",
+        "${request.ville}",
+        1, 
+        ${request.coup_coeur === null}, 
+        "${request.commentaire}", 
+        "${request.prix}",
+        now() )`
         );
         retourne_page_client_statique("/ajout_resto.html", res);
     }
@@ -83,8 +92,8 @@ async function verification_identification(identifiant, res){
         );
         const param = param_recu[0];
         if(param.mdp === identifiant.mdp){
-            const payload = {id : param.id, username : identifiant.username};
-            const token = jwt.sign(payload, SECRET_KEY, {expiresIn: 60*60});
+            const payload = {id : param.id, username : identifiant.username, exp : Math.floor(Date.now() / 1000) + (60 * 60)};
+            const token = jwt.sign(payload, SECRET_KEY);
             res.setHeader('Set-cookie',token);
             await retourne_page_client_statique("/ajout_resto.html", res);
         }
@@ -114,7 +123,7 @@ function return_404(res){
     })
 }
 
-async function retourne_page_client_dynamique(URL, res){
+async function retourne_page_client_dynamique(URL, res, modif){
     //traite la demande d'une page html en replaçant dans la page {{ville}} par la ville demander dans URL.query
     const chemin = URL.pathname;
     if(!chemin.match(/\.\./)){
@@ -125,8 +134,7 @@ async function retourne_page_client_dynamique(URL, res){
             }else{
                 let retour = data;
                 res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
-                const modif = querystring.parse(URL.query).ville;
-                retour = retour.replace(/{{ville}}/g, modif.toUpperCase());
+                retour = retour.replace(/{{texte_a_modifier}}/g, modif.toUpperCase());
                 res.write(retour);
                 res.end();
             }
@@ -199,12 +207,11 @@ const serveur = http.createServer(async (req, res) => {
         }
         else{
             if(URL.query != null){ // si y'a une query c'est une page où l'on doit modifier le code html coté serveur
-                await retourne_page_client_dynamique(URL, res);
+                await retourne_page_client_dynamique(URL, res, querystring.parse(URL.query).ville);
             }
             else{
                 await retourne_page_client_statique(URL.pathname, res); 
             }
-
         }
     }
     console.log(`${req.method} ${req.url}`);
