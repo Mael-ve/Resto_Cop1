@@ -167,15 +167,31 @@ async function retourne_page_client_statique(chemin, res){
 
 const serveur = http.createServer(async (req, res) => {
     const URL= url.parse(req.url);
-    if(req.method === 'POST'){ //si la requete est de type post -> c'est la demande de connexion
+    if(req.method === 'POST'){ //si la requete est de type post -> c'est une demande de connexion
         let  body = "";
         req.on('data', (chunck) =>{
             body += chunck.toString('utf8');
             
         });
         req.on('end', ()=>{
-            const identifiant = querystring.parse(body);
-            verification_identification(identifiant, res);
+            if(URL.path === "/connexion.html"){
+                const identifiant = querystring.parse(body);
+                verification_identification(identifiant, res);
+            }
+            else{ // si c'est pas connexion.html c'est que c'est une verification de connexion et que le body contient un token jwt
+                jwt.verify(body, SECRET_KEY, (err, decoded) => {
+                    if(err){ // si y'a une erreur c'est que body contient un token faux ou expirer
+                        res.writeHead(200);
+                        res.write("false");
+                        res.end();
+                    }
+                    else{
+                        res.writeHead(200);
+                        res.write("true");
+                        res.end();
+                    }
+                })
+            }
         })
     }else{
         if(URL.pathname.includes("/api/")){ //requete à la base de donnée
