@@ -8,6 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const mariadb = require("mariadb");
 const querystring = require('querystring');
+const jwt = require('jsonwebtoken');
 
 
 // Constante du serveur 
@@ -33,6 +34,8 @@ const MIME_TYPES = {
     ico: "image/x-icon",
     svg: "image/svg+xml",
 };
+
+const SECRET_KEY = 'Bloup-Bloup';
 
 const requete_securisée = {
     "/ajout_resto.html": (URL, res) => {requete_add_resto(URL, res);}
@@ -72,24 +75,28 @@ async function requete_add_resto(URL, res){
     }
 }
 
-function verification_identification(URL, res){
-    //focntion qui verifie l'authentification d'un utilisateur
-    const request = querystring.parse(URL.query);
-    connection.query(`SELECT mot_passe FROM commentateur where pseudo='${request.username}'`, (err, results, _)=>{
-        if(err){
-            console.log(err);
-            res.writeHead(500);
-            res.end();
+async function verification_identification(identifiant, res){
+    //fonction qui verifie l'authentification d'un utilisateur
+    try{
+        const param_recu = await connection.query(
+            `SELECT id, mdp FROM commentateur WHERE pseudo="${identifiant.username}"`
+        );
+        const param = param_recu[0];
+        if(param.mdp === identifiant.mdp){
+            const payload = {id : param.id, username : identifiant.username};
+            const token = jwt.sign(payload, SECRET_KEY, {expiresIn: 60*60});
+            res.setHeader('Set-cookie',token);
+            await retourne_page_client_statique("/ajout_resto.html", res);
         }
         else{
-            if(results[0].mot_passe === request.mdp){
-                retourne_page_client_statique("/ajout_resto.html", res);
-            }
-            else{
-                return_404(res);
-            }
+            res.writeHead(403);
+            res.end();
         }
-    })
+    }
+    catch(err){
+        console.log(err);
+        retourne_page_client_statique("/connexion.html", res);
+    }
 }
 
 function return_404(res){
@@ -160,9 +167,16 @@ async function retourne_page_client_statique(chemin, res){
 
 const serveur = http.createServer(async (req, res) => {
     const URL= url.parse(req.url);
-    if(req.method === 'post'){ //si la requete est de type post -> c'est la demande de connexion
-        res.writeHead(200);
-        res.end();
+    if(req.method === 'POST'){ //si la requete est de type post -> c'est la demande de connexion
+        let  body = "";
+        req.on('data', (chunck) =>{
+            body += chunck.toString('utf8');
+            
+        });
+        req.on('end', ()=>{
+            const identifiant = querystring.parse(body);
+            verification_identification(identifiant, res);
+        })
     }else{
         if(URL.pathname.includes("/api/")){ //requete à la base de donnée
             await requete_get_resto(URL, res);

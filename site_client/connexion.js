@@ -1,5 +1,5 @@
 function init_connexion(){
-    if(document.cookie ===""){
+    if(document.cookie === ""){
         location.replace("/connexion.html");
     }
 }
