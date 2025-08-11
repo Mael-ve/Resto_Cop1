@@ -92,7 +92,7 @@ async function verification_identification(identifiant, res){
         );
         const param = param_recu[0];
         if(param.mdp === identifiant.mdp){
-            const payload = {id : param.id, username : identifiant.username, exp : Math.floor(Date.now() / 1000) + (60 * 60)};
+            const payload = {id : param.id, username : identifiant.username, exp :Date.now()  + (2 * 60)};
             const token = jwt.sign(payload, SECRET_KEY);
             res.setHeader('Set-cookie',token);
             await retourne_page_client_statique("/ajout_resto.html", res);
