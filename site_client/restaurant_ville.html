@@ -5,12 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
         <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
-        <title>Resto De {{ville}}</title> 
+        <title>Resto De {{texte_a_modifier}}</title> 
     </head>
     <body>
         <h1> LE TRIPADVISOR DES COPAINS </h1>
+        
         <ul id="menu"> 
-			<li class="sous_menu"><a href = "site.html"> Nouveautés </a> </li>
+			<li class="sous_menu"><a href = "site.html"> Nouveaux </a> </li>
 			<li class="sous_menu"><a href = "restaurant_ville.html?ville=lyon"> Lyon </a> </li>
 			<li class="sous_menu"><a href = "restaurant_ville.html?ville=paris"> Paris </a> </li>
 			<li class="sous_menu" style="float:right"><a href = "recherche.html"> Recherche </a> </li>
@@ -18,10 +19,10 @@
 		</ul>
 
         <div id="titre_page">
-            <h2>{{ville}}</h2>
+            <h2>{{texte_a_modifier}}</h2>
         </div>
         <div id="Liste_resto">
         </div>
     </body>
-    <script type="text/javascript" src="client.js"></script>
+    <script type="text/javascript" src="demande_resto.js"></script>
 </html>

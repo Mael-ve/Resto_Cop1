@@ -7,10 +7,13 @@
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	</head>
+
+    <script type="text/javascript" src="connexion.js"></script>
+
 	<body>
 		<h1> LE TRIPADVISOR DES COPAINS </h1>
 		<ul id="menu"> 
-			<li class="sous_menu"><a href = "site.html"> Nouveautés </a> </li>
+			<li class="sous_menu"><a href = "site.html"> Nouveaux </a> </li>
 			<li class="sous_menu"><a href = "restaurant_ville.html?ville=lyon"> Lyon </a> </li>
 			<li class="sous_menu"><a href = "restaurant_ville.html?ville=paris"> Paris </a> </li>
 			<li class="sous_menu" style="float:right"><a href = "recherche.html"> Recherche </a> </li>
@@ -63,7 +66,9 @@
             </ul>
 
             <button type="submit">Publier le Restaurant</button>
-        </form>
 
+            <div id="message_erreur"></div>
+        </form>
+        
     </body>
 </html>

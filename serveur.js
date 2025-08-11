@@ -8,6 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const mariadb = require("mariadb");
 const querystring = require('querystring');
+const jwt = require('jsonwebtoken');
 
 
 // Constante du serveur 
@@ -34,12 +35,17 @@ const MIME_TYPES = {
     svg: "image/svg+xml",
 };
 
-const requete_BDD = ["lyon", "paris"]; // utiliser un dico 
+const SECRET_KEY = 'Bloup-Bloup';
+
+const requete_securisée = {
+    "/ajout_resto.html": (URL, res) => {requete_add_resto(URL, res);}
+}; // test de Mael
 
  
 // traitement des requêtes du client
 
 async function requete_get_resto(URL, res){
+    //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
     const ville = querystring.parse(URL.query).ville;
     try{
         const results = await connection.query(`SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="${ville}"`);
@@ -53,11 +59,21 @@ async function requete_get_resto(URL, res){
     }
 }
 
-async function requete_add_resto(URL, res){
+async function requete_add_resto(URL, res){ 
+    //fonction qui traite la requete url contenant un restaurant et ajoute le restaurant à la base de donnée
     const request = querystring.parse(URL.query);
     try{
         await connection.query(
-        `INSERT INTO restaurants VALUES("${request.nom_resto}", "${request.type_resto}", "${request.adresse}","${request.ville}", 1, ${request.coup_coeur === null}, "${request.commentaire}", "${request.prix}" )`,
+        `INSERT INTO restaurants VALUES(
+        "${request.nom_resto}",
+        "${request.type_resto}",
+        "${request.adresse}",
+        "${request.ville}",
+        1, 
+        ${request.coup_coeur === null}, 
+        "${request.commentaire}", 
+        "${request.prix}",
+        now() )`
         );
         retourne_page_client_statique("/ajout_resto.html", res);
     }
@@ -68,7 +84,32 @@ async function requete_add_resto(URL, res){
     }
 }
 
+async function verification_identification(identifiant, res){
+    //fonction qui verifie l'authentification d'un utilisateur
+    try{
+        const param_recu = await connection.query(
+            `SELECT id, mdp FROM commentateur WHERE pseudo="${identifiant.username}"`
+        );
+        const param = param_recu[0];
+        if(param.mdp === identifiant.mdp){
+            const payload = {id : param.id, username : identifiant.username, exp :Date.now()  + (2 * 60)};
+            const token = jwt.sign(payload, SECRET_KEY);
+            res.setHeader('Set-cookie',token);
+            await retourne_page_client_statique("/ajout_resto.html", res);
+        }
+        else{
+            res.writeHead(403);
+            res.end();
+        }
+    }
+    catch(err){
+        console.log(err);
+        retourne_page_client_statique("/connexion.html", res);
+    }
+}
+
 function return_404(res){
+    //retourne le fichier d'erreur 404
     fs.readFile(__dirname + "/site_client/404.html", (err, data) => {
         if(err){
             console.log("fichier 404 n'existe pas", err);
@@ -82,18 +123,18 @@ function return_404(res){
     })
 }
 
-async function retourne_page_client_dynamique(URL, res){
+async function retourne_page_client_dynamique(URL, res, modif){
+    //traite la demande d'une page html en replaçant dans la page {{ville}} par la ville demander dans URL.query
     const chemin = URL.pathname;
     if(!chemin.match(/\.\./)){
         const extension = path.extname(chemin).substring(1).toLowerCase();
-        fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) =>{
+        fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) =>{ // les fichiers pour pouvoir être modifier doivent etre ouvert en binary
             if(err){
                 return_404(res);
             }else{
                 let retour = data;
                 res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
-                const modif = querystring.parse(URL.query).ville;
-                retour = retour.replace(/{{ville}}/g, modif.toUpperCase());
+                retour = retour.replace(/{{texte_a_modifier}}/g, modif.toUpperCase());
                 res.write(retour);
                 res.end();
             }
@@ -103,14 +144,15 @@ async function retourne_page_client_dynamique(URL, res){
 
 
 async function retourne_page_client_statique(chemin, res){
-    if(!chemin.match(/\.\./)){ // match("..") ne fonctionne pas, vérfie s'il n'y pas /.. dans l'url pour la sécurité
+    //retourne un fichier demandé par le chemin
+    if(!chemin.match(/\.\./)){ //vérfie s'il n'y pas /.. dans l'url pour la sécurité
         if (chemin === "/"){ 
             chemin = "/index.html";
         }
 
         const extension = path.extname(chemin).substring(1).toLowerCase(); // retourne l'extension du fichier cherché
         let chemin_abs = "";
-        if(extension === 'ico' || extension === 'png'){
+        if(extension === 'ico' || extension === 'png'){ 
             chemin_abs = __dirname + "/site_client/favicon_io" + chemin;
         }
         else{
@@ -133,19 +175,44 @@ async function retourne_page_client_statique(chemin, res){
 
 const serveur = http.createServer(async (req, res) => {
     const URL= url.parse(req.url);
-    if(URL.query != null){
-        if(URL.pathname.includes("/api/")){
-            await requete_get_resto(URL, res); 
-        }else{
-            if(URL.pathname === "/ajout_resto.html"){
-                await requete_add_resto(URL, res);
+    if(req.method === 'POST'){ //si la requete est de type post -> c'est une demande de connexion
+        let  body = "";
+        req.on('data', (chunck) =>{
+            body += chunck.toString('utf8');
+            
+        });
+        req.on('end', ()=>{
+            if(URL.path === "/connexion.html"){
+                const identifiant = querystring.parse(body);
+                verification_identification(identifiant, res);
+            }
+            else{ // si c'est pas connexion.html c'est que c'est une verification de connexion et que le body contient un token jwt
+                jwt.verify(body, SECRET_KEY, (err, decoded) => {
+                    if(err){ // si y'a une erreur c'est que body contient un token faux ou expirer
+                        res.writeHead(200);
+                        res.write("false");
+                        res.end();
+                    }
+                    else{
+                        res.writeHead(200);
+                        res.write("true");
+                        res.end();
+                    }
+                })
+            }
+        })
+    }else{
+        if(URL.pathname.includes("/api/")){ //requete à la base de donnée
+            await requete_get_resto(URL, res);
+        }
+        else{
+            if(URL.query != null){ // si y'a une query c'est une page où l'on doit modifier le code html coté serveur
+                await retourne_page_client_dynamique(URL, res, querystring.parse(URL.query).ville);
             }
             else{
-                await retourne_page_client_dynamique(URL, res);
+                await retourne_page_client_statique(URL.pathname, res); 
             }
         }
-    }else{
-        await retourne_page_client_statique(URL.pathname, res);
     }
     console.log(`${req.method} ${req.url}`);
 })
