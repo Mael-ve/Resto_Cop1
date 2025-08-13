@@ -21,7 +21,7 @@ let connection = null;
     database : bdd.database
 })})()
 
-const port = 8889;
+const port = 8000;
 
 const MIME_TYPES = {
     default: "application/octet-stream",
@@ -92,7 +92,7 @@ async function verification_identification(identifiant, res){
         );
         const param = param_recu[0];
         if(param.mdp === identifiant.mdp){
-            const payload = {id : param.id, username : identifiant.username, exp :Date.now()  + (2 * 60)};
+            const payload = {id : param.id, username : identifiant.username, exp: Date.now() + 30*60};
             const token = jwt.sign(payload, SECRET_KEY);
             res.setHeader('Set-cookie',token);
             await retourne_page_client_statique("/ajout_resto.html", res);
@@ -182,13 +182,14 @@ const serveur = http.createServer(async (req, res) => {
             
         });
         req.on('end', ()=>{
-            if(URL.path === "/connexion.html"){
+            if(URL.pathname === "/connexion.html"){
                 const identifiant = querystring.parse(body);
                 verification_identification(identifiant, res);
             }
             else{ // si c'est pas connexion.html c'est que c'est une verification de connexion et que le body contient un token jwt
                 jwt.verify(body, SECRET_KEY, (err, decoded) => {
                     if(err){ // si y'a une erreur c'est que body contient un token faux ou expirer
+                        console.log(err);
                         res.writeHead(200);
                         res.write("false");
                         res.end();
@@ -207,7 +208,12 @@ const serveur = http.createServer(async (req, res) => {
         }
         else{
             if(URL.query != null){ // si y'a une query c'est une page où l'on doit modifier le code html coté serveur
-                await retourne_page_client_dynamique(URL, res, querystring.parse(URL.query).ville);
+                if(URL.pathname === '/ajout_resto.html'){
+                    console.log(req.getHeaders);
+                }
+                else{
+                    await retourne_page_client_dynamique(URL, res, querystring.parse(URL.query).ville);
+                }
             }
             else{
                 await retourne_page_client_statique(URL.pathname, res); 
