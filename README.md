@@ -1,4 +1,4 @@
-Rrequete de création des bases de données utilisé :
+Requetes de création des bases de données utilisées :
 
 CREATE TABLE commentateur (
   	id int(255) unsigned NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE restaurants (
 	coup_coeur bool,
 	commentaire TEXT,
 	prix TEXT,
-	date_ajout DATTIME, 
+	date_ajout DATETIME, 
 	PRIMARY KEY (nom)
 )
 
