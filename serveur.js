@@ -225,8 +225,8 @@ const serveur = http.createServer(async (req, res) => {
                 let chemin = URL.pathname;
                 let modif_html = querystring.parse(URL.query).modif === undefined ? " " : querystring.parse(URL.query).modif;
                 let request = querystring.parse(URL.query);
-                if(URL.pathname === "/ajout_resto.html"&&request.nom_resto != undefined){
-                    modif_html = await jwt.verify(req.headers.cookie, SECRET_KEY, async (err, decoded) => {
+                if(URL.pathname === "/ajout_resto.html"&&request.nom_resto != undefined){ // Si on chercher à ajouter un resto 
+                    modif_html = await jwt.verify(req.headers.cookie, SECRET_KEY, async (err, decoded) => { //on verifie le jeton de connexion
                         let modif_tempo = modif_html;
                         if(err){
                             modif_tempo="Il y'a eu une erreur, merci de vous reconnecter";
