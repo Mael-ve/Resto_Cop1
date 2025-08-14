@@ -5,8 +5,8 @@ let liste_resto = [];
 // resto à prendre en exemple pour les graphismes (type de renvoie dans un tableau de la requete fetch("/Lyon."))
 // {nom: "Naanwich'riz", type_resto: "indien", localisation: "7 rue Désirée, au dessus de l’opéra", coup_coeur: 0}
 
-async function get_data(requete){
-    const reponse = await fetch(`/api/get_resto?ville=${requete}`);
+async function get_data(){
+    const reponse = await fetch(`/api/get_resto?filtre=`);
     const data = await reponse.json();
     return data;
 }
@@ -28,8 +28,7 @@ const addDataHTML = () =>{
 }
 
 const initApp = async () =>{
-    const requete = requeteHTML.outerText.toLowerCase(); // recupere le titre de la page 
-    liste_resto = await get_data(requete);
+    liste_resto = await get_data();
     addDataHTML();
 }
 

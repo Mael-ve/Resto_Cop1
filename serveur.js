@@ -37,18 +37,20 @@ const MIME_TYPES = {
 
 const SECRET_KEY = 'Bloup-Bloup'; //clé d'encodage des jwt 
 
-const requete_securisée = {
-    "/ajout_resto.html": (URL, res) => {requete_add_resto(URL, res);}
-}; // test de Mael
+const requete_sql = { //dictionnaire (clé : filtre appliqué a la base de donnée, valeur: requete sql associé)
+    "": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants ORDER BY date_ajout DESC LIMIT 10`,
+    "lyon": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="lyon"`,
+    "paris": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="paris"`
+}; 
 
  
 // traitement des requêtes du client
 
 async function requete_get_resto(URL, res){
     //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
-    const ville = querystring.parse(URL.query).ville;
+    const filtre = querystring.parse(URL.query).filtre;
     try{
-        const results = await connection.query(`SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="${ville}"`);
+        const results = await connection.query(requete_sql[filtre]);
         res.writeHead(200);
         res.end(JSON.stringify(results));
     }
@@ -77,10 +79,10 @@ async function requete_add_resto(request, id_commentateur){
         try{
             await connection.query(
             `INSERT INTO restaurants VALUES(
-            "${request.nom_resto}",
-            "${request.type_resto}",
+            "${request.nom_resto.toLowerCase()}",
+            "${request.type_resto.toLowerCase()}",
             "${request.adresse}",
-            "${request.ville}",
+            "${request.ville.toLowerCase()}",
             ${id_commentateur}, 
             ${request.coup_coeur === null}, 
             "${request.commentaire}", 
