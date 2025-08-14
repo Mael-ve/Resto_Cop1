@@ -92,3 +92,7 @@ textarea{
 button{
     margin: 1em;
 }
+
+#message_erreur{
+    color: red;
+}

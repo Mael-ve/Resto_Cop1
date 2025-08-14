@@ -35,7 +35,7 @@ const MIME_TYPES = {
     svg: "image/svg+xml",
 };
 
-const SECRET_KEY = 'Bloup-Bloup';
+const SECRET_KEY = 'Bloup-Bloup'; //clé d'encodage des jwt 
 
 const requete_securisée = {
     "/ajout_resto.html": (URL, res) => {requete_add_resto(URL, res);}
@@ -59,29 +59,44 @@ async function requete_get_resto(URL, res){
     }
 }
 
-async function requete_add_resto(URL, res){ 
+async function requete_add_resto(request, id_commentateur){ 
     //fonction qui traite la requete url contenant un restaurant et ajoute le restaurant à la base de donnée
-    const request = querystring.parse(URL.query);
-    try{
-        await connection.query(
-        `INSERT INTO restaurants VALUES(
-        "${request.nom_resto}",
-        "${request.type_resto}",
-        "${request.adresse}",
-        "${request.ville}",
-        1, 
-        ${request.coup_coeur === null}, 
-        "${request.commentaire}", 
-        "${request.prix}",
-        now() )`
-        );
-        retourne_page_client_statique("/ajout_resto.html", res);
+    let message = "Merci d'avoir ajouter un restaurant !";
+    let est_vide = false;
+    for(const [key, value] of Object.entries(request)){
+        if(key === 'modif'){
+            continue;
+        }
+        else{
+            if(value === ''){
+                est_vide = true
+            }
+        }
     }
-    catch(err){
-        console.log(err);
-        res.writeHead(500);
-        res.end();
+    if(!est_vide){
+        try{
+            await connection.query(
+            `INSERT INTO restaurants VALUES(
+            "${request.nom_resto}",
+            "${request.type_resto}",
+            "${request.adresse}",
+            "${request.ville}",
+            ${id_commentateur}, 
+            ${request.coup_coeur === null}, 
+            "${request.commentaire}", 
+            "${request.prix}",
+            now() )`
+            );
+
+        }
+        catch(err){
+            message = "il y'a une erreur de bdd";
+        }
+    } 
+    else{
+        message = "Merci de remplir toutes les cases";
     }
+    return message;
 }
 
 async function verification_identification(identifiant, res){
@@ -123,9 +138,8 @@ function return_404(res){
     })
 }
 
-async function retourne_page_client_dynamique(URL, res, modif){
-    //traite la demande d'une page html en replaçant dans la page {{ville}} par la ville demander dans URL.query
-    const chemin = URL.pathname;
+async function retourne_page_client_dynamique(chemin, res, modif){
+    //traite la demande d'une page html en replaçant dans la page {{texte_a_modifier}} par la ville demander dans URL.query
     if(!chemin.match(/\.\./)){
         const extension = path.extname(chemin).substring(1).toLowerCase();
         fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) =>{ // les fichiers pour pouvoir être modifier doivent etre ouvert en binary
@@ -208,12 +222,22 @@ const serveur = http.createServer(async (req, res) => {
         }
         else{
             if(URL.query != null){ // si y'a une query c'est une page où l'on doit modifier le code html coté serveur
-                if(URL.pathname === '/ajout_resto.html'){
-                    console.log(req.getHeaders);
+                let chemin = URL.pathname;
+                let modif_html = querystring.parse(URL.query).modif === undefined ? " " : querystring.parse(URL.query).modif;
+                let request = querystring.parse(URL.query);
+                if(URL.pathname === "/ajout_resto.html"&&request.nom_resto != undefined){
+                    modif_html = await jwt.verify(req.headers.cookie, SECRET_KEY, async (err, decoded) => {
+                        let modif_tempo = modif_html;
+                        if(err){
+                            modif_tempo="Il y'a eu une erreur, merci de vous reconnecter";
+                        }
+                        else{
+                            modif_tempo = await requete_add_resto(request, decoded.id);
+                        }
+                        return modif_tempo;
+                    });
                 }
-                else{
-                    await retourne_page_client_dynamique(URL, res, querystring.parse(URL.query).ville);
-                }
+                await retourne_page_client_dynamique(chemin, res, modif_html);
             }
             else{
                 await retourne_page_client_statique(URL.pathname, res); 

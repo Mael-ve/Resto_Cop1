@@ -5,13 +5,18 @@ async function verifie_cookie(){
 }
 
 async function init_connexion(){
-    const cookie_valable = await verifie_cookie();
-    if(document.cookie === "" || !cookie_valable ){
-        location.replace("/connexion.html");
+    if(document.cookie === ""){
+        location.replace("/connexion.html?modif=");
     }
     else{
-        if(location.pathname === "/connexion.html"){
-            location.replace("/ajout_resto.html");
+        const cookie_valable = await verifie_cookie();
+        if(!cookie_valable){
+            location.replace("/connexion.html?modif=Session expiré. Merci de vous reconnecter.");
+        }
+        else{
+            if(location.pathname === "/connexion.html"){
+                location.replace("/ajout_resto.html?modif=");
+            }
         }
     }
 }

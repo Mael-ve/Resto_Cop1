@@ -15,10 +15,10 @@
 
 		<ul id="menu"> 
 			<li class="sous_menu"><a href = "site.html"> Nouveaux </a> </li>
-			<li class="sous_menu"><a href = "restaurant_ville.html?ville=lyon"> Lyon </a> </li>
-			<li class="sous_menu"><a href = "restaurant_ville.html?ville=paris"> Paris </a> </li>
+			<li class="sous_menu"><a href = "restaurant_ville.html?modif=lyon"> Lyon </a> </li>
+			<li class="sous_menu"><a href = "restaurant_ville.html?modif=paris"> Paris </a> </li>
 			<li class="sous_menu" style="float:right"><a href = "recherche.html"> Recherche </a> </li>
-            <li class="sous_menu" style="float:right"><a href = "ajout_resto.html"> Ajouter un Restaurant </a> </li>
+            <li class="sous_menu" style="float:right"><a href = "ajout_resto.html?modif="> Ajouter un Restaurant </a> </li>
 		</ul>
 		
 		<form method="post">
@@ -37,6 +37,7 @@
 			</ul>
 			
 			<button type="submit">Se Connecter</button>
+			<div id="message_erreur">{{texte_a_modifier}}</div>
 		</form>
 		
 	</body>
