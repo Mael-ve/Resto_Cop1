@@ -5,29 +5,27 @@ let liste_resto = [];
 // resto à prendre en exemple pour les graphismes (type de renvoie dans un tableau de la requete fetch("/Lyon."))
 // {nom: "Naanwich'riz", type_resto: "indien", localisation: "7 rue Désirée, au dessus de l’opéra", coup_coeur: 0}
 
-async function get_data(){
-    const reponse = await fetch(`/api/get_resto?filtre=`);
+async function get_data() {
+    const reponse = await fetch(`/api/get_resto?ville=Lyon`);
     const data = await reponse.json();
     return data;
 }
 
-const addDataHTML = () =>{
+const addDataHTML = () => {
     liste_restoHTML.innerHTML = '';
-    if(liste_resto.length > 0){
-        liste_resto.forEach(resto => {
-            let newResto = document.createElement("div");
-            newResto.classList.add('resto'); // classe de chaque restaurant 
-            // forme du resto dans sa grille
-            newResto.innerHTML = `
+    liste_resto.forEach(resto => {
+        let newResto = document.createElement("div");
+        newResto.classList.add('resto'); // classe de chaque restaurant 
+        // forme du resto dans sa grille
+        newResto.innerHTML = `
             <h3>${resto.nom}</h3>
             <p>${resto.type_resto}</p>  
             `;
-            liste_restoHTML.appendChild(newResto);
-        })
-    }
+        liste_restoHTML.appendChild(newResto);
+    })
 }
 
-const initApp = async () =>{
+async function initApp() {
     liste_resto = await get_data();
     addDataHTML();
 }

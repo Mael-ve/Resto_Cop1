@@ -1,98 +1,90 @@
 /* Fond des page */
-body { 
+body {
     font-family: "Montserrat", sans-serif;
-    color : white;
-    background-color : #d4bc5b;
+    color: white;
+    background-color: #d4bc5b;
 }
 
 /* Titre */
 h1 {
-    color: black; 
-    border: 2px solid Black; 
-    background-color:#e0d5a6;
+    color: black;
+    border: 2px solid Black;
+    background-color: #e0d5a6;
     padding: 20px;
-    text-align:center;
+    text-align: center;
     border-radius: 10px;
 }
 
-#titre_page{
+#titre_page {
     text-align: center;
 }
 
 /* Bandeau de menu */
 ul#menu {
     list-style-type: none;
-    margin:0;
-    padding:0;
-    overflow:hidden;
-        background-color: #e0d5a6;
-    position: sticky;	
-    top:10px;
-    width:100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #e0d5a6;
+    position: sticky;
+    top: 10px;
+    width: 100%;
 }
 
-li.sous_menu{ 	 float:left;
-        border-right: 1px solid #bbb;
+li.sous_menu {
+    float: left;
+    border-right: 1px solid #bbb;
 }
 
 li.sous_menu a {
-    text-align:center;
-    color:black;
-    display:block;
+    text-align: center;
+    color: black;
+    display: block;
     padding: 8px 16px;
     text-decoration: none;
-    }
+}
 
-li.sous_menu a:hover{
-    background-color: #555; 
-    color:white;
+li.sous_menu a:hover {
+    background-color: #555;
+    color: white;
 }
 
 
 /* Affichage de la liste des resto proposés */
-#Liste_resto{
+#Liste_resto {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    column-gap: 15px ;
-    row-gap:15px;
+    column-gap: 15px;
+    row-gap: 15px;
 }
 
-.resto{
-    background: #919191; /* trouver commment mettre de la transparence sur le gris (le fond seulement) */
-    border-radius : 10px;
-    border : 3px solid black;
+.resto {
+    background: #919191;
+    /* trouver commment mettre de la transparence sur le gris (le fond seulement) */
+    border-radius: 10px;
+    border: 3px solid black;
     display: flex;
     flex-direction: column;
     text-align: center;
-} 
-
-
-/* Formulaire des nouveaux resto  */
-form{
-    margin: 3em auto;
-    width: 500px;
-    padding: 2em;
-    border: 1px solid #ccc;
-    border-radius: 1em;
 }
 
-ul#form{
+ul#form {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-textarea{
+textarea {
     vertical-align: top;
     height: 5em;
     resize: vertical;
     font: 1em sans-serif;
 }
 
-button{
+button {
     margin: 1em;
 }
 
-#message_erreur{
+#message_erreur {
     color: red;
 }

@@ -4,7 +4,7 @@ CREATE TABLE commentateur (
   	id int(255) unsigned NOT NULL,
   	pseudo varchar(50),
   	lien_tete varchar(255) DEFAULT NULL,
-	mdp varchar(50),
+	mdp varchar(255),
   	PRIMARY KEY (id)
   	)
 

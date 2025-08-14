@@ -1,24 +1,19 @@
-async function verifie_cookie(){
-    const est_bon_token = await fetch("/ajout_resto.html", {method : 'POST', body : document.cookie});
-    const reponse = await est_bon_token.json();
-    return reponse === true;
-}
+async function login() {
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("mdp").value;
 
-async function init_connexion(){
-    if(document.cookie === ""){
-        location.replace("/connexion.html?modif=");
+    let r = await fetch("/api/login", { method: "POST", body: JSON.stringify({ username, password }) });
+
+    if (r.status === 200) {
+        let { token } = await r.json();
+        document.cookie = "Token=" + token;
+
+        let params = new URLSearchParams(location.search);
+        let next = params.get("next") || "/";
+        location.replace(next);
     }
-    else{
-        const cookie_valable = await verifie_cookie();
-        if(!cookie_valable){
-            location.replace("/connexion.html?modif=Session expiré. Merci de vous reconnecter.");
-        }
-        else{
-            if(location.pathname === "/connexion.html"){
-                location.replace("/ajout_resto.html?modif=");
-            }
-        }
+    else {
+        console.log(`Error login in: ${r.statusText}`);
+        document.getElementById("message_erreur").innerText = `Erreur de connexion: ${r.statusText}`;
     }
 }
-
-init_connexion();
