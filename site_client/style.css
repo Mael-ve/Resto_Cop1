@@ -102,3 +102,23 @@ button{
 #message_erreur{
     color: red;
 }
+
+/*Page d'erreur 404*/
+.div-centree {
+    max-width: fit-content;
+    margin: auto;
+    display: block;
+
+}
+
+#mess-erreur {
+    text-align: center;
+    color: black;
+    font-size: 500%;
+}
+
+#petit-texte {
+    text-align: center;
+    color: black;
+    font-size: 75%;
+}
