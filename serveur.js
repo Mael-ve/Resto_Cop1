@@ -111,17 +111,17 @@ async function verification_identification(identifiant, res){
         if(param.mdp === identifiant.mdp){
             const payload = {id : param.id, username : identifiant.username, exp: Date.now() + 30*60};
             const token = jwt.sign(payload, SECRET_KEY);
-            res.setHeader('Set-cookie',token);
-            await retourne_page_client_statique("/ajout_resto.html", res);
+            res.setHeader('Set-cookie',`cookie: ${token}; Expires: ${Date.now() + 2*60*1000}`);
+            console.log("le jeton de connexion est valide et est bien mis dans les cookies");
+            await retourne_page_client_dynamique("/ajout_resto.html", res, "");
         }
         else{
-            res.writeHead(403);
-            res.end();
+            retourne_page_client_dynamique("/connexion.html", res, "Le mot de passe n'est pas bon");
         }
     }
     catch(err){
         console.log(err);
-        retourne_page_client_statique("/connexion.html", res);
+        retourne_page_client_dynamique("/connexion.html", res, "L'identifaint n'existe pas");
     }
 }
 

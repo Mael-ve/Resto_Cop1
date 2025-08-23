@@ -6,7 +6,7 @@ async function verifie_cookie(){
 
 async function init_connexion(){
     if(document.cookie === ""){
-        location.replace("/connexion.html?modif=");
+        location.replace("/connexion.html?modif=les cookies sont vides ");
     }
     else{
         const cookie_valable = await verifie_cookie();

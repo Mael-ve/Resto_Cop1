@@ -19,7 +19,9 @@ const addDataHTML = () =>{
             newResto.classList.add('resto'); // classe de chaque restaurant 
             // forme du resto dans sa grille
             newResto.innerHTML = `
+            <a href="page_resto.html?modif=${resto.nom}">
             <h3>${resto.nom}</h3>
+            </a>
             <p>${resto.type_resto}</p>  
             `;
             liste_restoHTML.appendChild(newResto);
