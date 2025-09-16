@@ -35,6 +35,15 @@ const MIME_TYPES = {
     svg: "image/svg+xml",
 };
 
+const API={
+    "GET": {
+        "/get_resto": {authentification_required : false, process: get_resto}
+    },
+    "POST": {
+        "/login" : { process: login}
+    }
+}
+
 const SECRET_KEY = 'Bloup-Bloup'; //clé d'encodage des jwt 
 
 const requete_sql = { //dictionnaire (clé : filtre appliqué a la base de donnée, valeur: requete sql associé)
@@ -46,7 +55,7 @@ const requete_sql = { //dictionnaire (clé : filtre appliqué a la base de donn�
  
 // traitement des requêtes du client
 
-async function requete_get_resto(URL, res){
+async function get_resto(URL, res){
     //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
     const filtre = querystring.parse(URL.query).filtre;
     try{
@@ -187,10 +196,40 @@ async function retourne_page_client_statique(chemin, res){
     }
 }
 
+async function login(){
+
+}
+
+async function traitement_api(requete_api, url, req, res){
+    let requetes_api = API[req.method];
+    let actions = requetes_api ? requetes_api[requete_api] : undefined;
+
+    if(!requetes_api){
+        res.writeHead(404);
+        res.end();
+        return;
+    }
+
+    let {authentification_required, process} = actions;
+
+    if(authentification_required){
+
+    }
+
+    process(req, res, url, user);
+
+}
+
 // serveur qui toune au port 8000 
 
 const serveur = http.createServer(async (req, res) => {
-    const URL= url.parse(req.url);
+    const url = new URL(`http://localhost${req.url}`);
+
+    if(req.url.startsWith("/api/")){
+        let requete_api = url.pathname.slice(4);
+        traitement_api(requete_api, url, req, res);
+    }
+
     if(req.method === 'POST'){ //si la requete est de type post -> c'est une demande de connexion
         let  body = "";
         req.on('data', (chunck) =>{
@@ -220,7 +259,7 @@ const serveur = http.createServer(async (req, res) => {
         })
     }else{
         if(URL.pathname.includes("/api/")){ //requete à la base de donnée
-            await requete_get_resto(URL, res);
+            await get_resto(URL, res);
         }
         else{
             if(URL.query != null){ // si y'a une query c'est une page où l'on doit modifier le code html coté serveur
