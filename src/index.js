@@ -4,32 +4,15 @@ const url = require("node:url");
 const http = require("http");
 const stream = require("node:stream")
 const fs = require("fs");
-const path = require("path");
-const mariadb = require("mariadb");
+const path = require("node:path");
 const querystring = require('querystring');
 const jwt = require('jsonwebtoken');
 const { createConnection } = require("node:net");
 
+const DB = require('./serveur/mariadb.js');
+
 
 // Constante du serveur 
-async function connectDB() {
-  while (true) {
-    try {
-        const conn = await mariadb.createConnection({
-        host: process.env.MARIADB_HOST,
-        user: process.env.MARIADB_USER,
-        password: process.env.MARIADB_PASSWORD,
-        database: process.env.MARIADB_DB
-      });
-      console.log("✅ Connecté à MariaDB");
-      return conn;
-    } catch (err) {
-      console.log("⏳ MariaDB pas prête, retry dans 2s...");
-      await new Promise(r => setTimeout(r, 2000));
-    }
-  }
-}
-const connection = connectDB();
 
 const port = 8000;
 
@@ -47,7 +30,7 @@ const MIME_TYPES = {
 
 const API={
     "GET": {
-        "/get_resto": {authentification_required : false, process: get_resto}
+        "/get_resto": {authentification_required : false, process: DB.get_resto}
     },
     "POST": {
         "/login" : { process: login}
@@ -64,85 +47,6 @@ const requete_sql = { //dictionnaire (clé : filtre appliqué a la base de donn�
 
  
 // traitement des requêtes du client
-
-async function get_resto(URL, res){
-    //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
-    const filtre = querystring.parse(URL.query).filtre;
-    try{
-        const results = await connection.query(requete_sql[filtre]);
-        res.writeHead(200);
-        res.end(JSON.stringify(results));
-    }
-    catch (err){
-        console.log(err);
-        res.writeHead(500);
-        res.end();
-    }
-}
-
-async function requete_add_resto(request, id_commentateur){ 
-    //fonction qui traite la requete url contenant un restaurant et ajoute le restaurant à la base de donnée
-    let message = "Merci d'avoir ajouter un restaurant !";
-    let est_vide = false;
-    for(const [key, value] of Object.entries(request)){
-        if(key === 'modif'){
-            continue;
-        }
-        else{
-            if(value === ''){
-                est_vide = true
-            }
-        }
-    }
-    if(!est_vide){
-        try{
-            await connection.query(
-            `INSERT INTO restaurants VALUES(
-            "${request.nom_resto.toLowerCase()}",
-            "${request.type_resto.toLowerCase()}",
-            "${request.adresse}",
-            "${request.ville.toLowerCase()}",
-            ${id_commentateur}, 
-            ${request.coup_coeur === null}, 
-            "${request.commentaire}", 
-            "${request.prix}",
-            now() )`
-            );
-
-        }
-        catch(err){
-            message = "il y'a une erreur de bdd";
-        }
-    } 
-    else{
-        message = "Merci de remplir toutes les cases";
-    }
-    return message;
-}
-
-async function verification_identification(identifiant, res){
-    //fonction qui verifie l'authentification d'un utilisateur
-    try{
-        const param_recu = await connection.query(
-            `SELECT id, mdp FROM commentateur WHERE pseudo="${identifiant.username}"`
-        );
-        const param = param_recu[0];
-        if(param.mdp === identifiant.mdp){
-            const payload = {id : param.id, username : identifiant.username, exp: Date.now() + 30*60};
-            const token = jwt.sign(payload, SECRET_KEY);
-            res.setHeader('Set-cookie',`cookie: ${token}; Expires: ${Date.now() + 2*60*1000}`);
-            console.log("le jeton de connexion est valide et est bien mis dans les cookies");
-            await retourne_page_client_dynamique("/ajout_resto.html", res, "");
-        }
-        else{
-            retourne_page_client_dynamique("/connexion.html", res, "Le mot de passe n'est pas bon");
-        }
-    }
-    catch(err){
-        console.log(err);
-        retourne_page_client_dynamique("/connexion.html", res, "L'identifaint n'existe pas");
-    }
-}
 
 function return_404(res){
     //retourne le fichier d'erreur 404
@@ -180,7 +84,7 @@ async function retourne_page_client_dynamique(chemin, res, modif){
 
 async function retourne_page_client_statique(chemin, res){
     //retourne un fichier demandé par le chemin
-    if(!chemin.match(/\.\./)){ //vérfie s'il n'y pas /.. dans l'url pour la sécurité
+    if(true || !chemin.match(/\.\./)){ //vérfie s'il n'y pas /.. dans l'url pour la sécurité
         if (chemin === "/"){ 
             chemin = "/index.html";
         }
@@ -268,8 +172,8 @@ const serveur = http.createServer(async (req, res) => {
             }
         })
     }else{
-        if(URL.pathname.includes("/api/")){ //requete à la base de donnée
-            await get_resto(URL, res);
+        if(false&&URL.pathname.includes("/api/")){ //requete à la base de donnée
+            await DB.get_resto(URL, res);
         }
         else{
             if(URL.query != null){ // si y'a une query c'est une page où l'on doit modifier le code html coté serveur
@@ -283,7 +187,7 @@ const serveur = http.createServer(async (req, res) => {
                             modif_tempo="Il y'a eu une erreur, merci de vous reconnecter";
                         }
                         else{
-                            modif_tempo = await requete_add_resto(request, decoded.id);
+                            modif_tempo = await DB.requete_add_resto(request, decoded.id);
                         }
                         return modif_tempo;
                     });
@@ -298,7 +202,9 @@ const serveur = http.createServer(async (req, res) => {
     console.log(`${req.method} ${req.url}`);
 })
 
-
-serveur.listen(port, () => {
-    console.log(`Le serveur tourne au port ${port}`);
+DB.init().then(() => {
+    serveur.listen(port, () => console.log(`Le serveur tourne au port ${port}`));
+}).catch((err)=>{
+    console.error(err);
+    process.exit(1);
 });

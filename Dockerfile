@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["node", "serveur.js"]
+CMD ["node", "src/index.js"]

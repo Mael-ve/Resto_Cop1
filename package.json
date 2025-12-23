@@ -19,8 +19,8 @@
     },
     "dependencies": {
         "jsonwebtoken": "^9.0.2",
-        "mariadb": "^3.4.5"
+        "mariadb": "^3.4.5",
+        "wait-port": "^1.1.0"
     },
-    "devDependencies": {},
     "keywords": []
 }
