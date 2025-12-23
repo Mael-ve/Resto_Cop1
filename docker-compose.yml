@@ -1,0 +1,23 @@
+services: 
+  site: 
+    build: .
+    ports:
+      - 8000:8000
+    environment:
+      MARIADB_HOST: mariadb
+      MARIADB_USER: root
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DB: ${DB_NAME}
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:12
+    volumes:
+      - db_site:/var/lib/mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+
+volumes:
+  db_site:

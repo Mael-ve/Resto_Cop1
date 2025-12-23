@@ -1,7 +1,6 @@
 // Importation des modules/Frameworks utiles 
 
 const url = require("node:url");
-const bdd = require("./access_bdd.json");
 const http = require("http");
 const stream = require("node:stream")
 const fs = require("fs");
@@ -9,17 +8,28 @@ const path = require("path");
 const mariadb = require("mariadb");
 const querystring = require('querystring');
 const jwt = require('jsonwebtoken');
+const { createConnection } = require("node:net");
 
 
 // Constante du serveur 
-let connection = null;
-(async () => {
-    connection = await mariadb.createConnection({
-    user : bdd.user,
-    host : bdd.host,
-    password : bdd.password,
-    database : bdd.database
-})})()
+async function connectDB() {
+  while (true) {
+    try {
+        const conn = await mariadb.createConnection({
+        host: process.env.MARIADB_HOST,
+        user: process.env.MARIADB_USER,
+        password: process.env.MARIADB_PASSWORD,
+        database: process.env.MARIADB_DB
+      });
+      console.log("✅ Connecté à MariaDB");
+      return conn;
+    } catch (err) {
+      console.log("⏳ MariaDB pas prête, retry dans 2s...");
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+}
+const connection = connectDB();
 
 const port = 8000;
 
