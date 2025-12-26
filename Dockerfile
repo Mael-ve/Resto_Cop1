@@ -11,4 +11,5 @@ COPY . .
 
 EXPOSE 8000
 
+ENTRYPOINT ["nodemon", "src/index.js"] 
 CMD ["npm", "run", "dev"]

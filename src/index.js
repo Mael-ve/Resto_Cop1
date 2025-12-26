@@ -14,7 +14,8 @@ const DB = require('./serveur/mariadb.js');
 
 // Constante du serveur 
 
-const port = 8000;
+const PORT = 8000;
+const SECRET_KEY = 'Bloup-Bloup'; //clé d'encodage des jwt 
 
 const MIME_TYPES = {
     default: "application/octet-stream",
@@ -28,8 +29,9 @@ const MIME_TYPES = {
     svg: "image/svg+xml",
 };
 
-const API={
+const ENDPOINTS={
     "GET": {
+        //"/me": {authentification_required  : true, process: api_me},
         "/get_resto": {authentification_required : false, process: DB.get_resto}
     },
     "POST": {
@@ -37,31 +39,11 @@ const API={
     }
 }
 
-const SECRET_KEY = 'Bloup-Bloup'; //clé d'encodage des jwt 
-
-const requete_sql = { //dictionnaire (clé : filtre appliqué a la base de donnée, valeur: requete sql associé)
-    "": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants ORDER BY date_ajout DESC LIMIT 10`,
-    "lyon": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="lyon"`,
-    "paris": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="paris"`
-}; 
-
+Array.prototype.last = function () {
+    return this[this.length - 1];
+}
  
 // traitement des requêtes du client
-
-function return_404(res){
-    //retourne le fichier d'erreur 404
-    fs.readFile(__dirname + "/site_client/404.html", (err, data) => {
-        if(err){
-            console.log("fichier 404 n'existe pas", err);
-            res.writeHead(500);
-            res.end();
-        }
-        else{
-            res.writeHead(404);
-            res.end(data);
-        }
-    })
-}
 
 async function retourne_page_client_dynamique(chemin, res, modif){
     //traite la demande d'une page html en replaçant dans la page {{texte_a_modifier}} par la ville demander dans URL.query
@@ -81,46 +63,55 @@ async function retourne_page_client_dynamique(chemin, res, modif){
     }
 }
 
+function serveur_statique(url, res){
+    if(url.pathname.includes("..")){
+        res.writeHead(400);
+        res.end();
+        return;
+    }
 
-async function retourne_page_client_statique(chemin, res){
-    //retourne un fichier demandé par le chemin
-    chemin = String(chemin);
-    
-    if(true || !chemin.match(/\.\./)){ //vérfie s'il n'y pas /.. dans l'url pour la sécurité
-        if (chemin === "/"){ 
-            chemin = "/index.html";
+    let chemin = url.pathname;
+    if(chemin === "/"){
+        chemin = "/index.html";
+    }
+    else if (chemin == "/favicon.ico") {
+        chemin = "/favicon_io/favicon.ico";
+    }
+
+    let chemin_total = __dirname + "/site_client" + chemin;
+    console.log(`Renvoie ${chemin_total}`);
+
+    fs.readFile(chemin_total, (err, data) => {
+        if(err && err.code === "ENOENT"){
+            console.log("fichier non trouvé");
+            res.writeHead(404);
+            fs.readFile(__dirname + "/site_client/404.html", (_, data) =>{
+                res.end(data);
+            });
         }
-
-        const extension = path.extname(chemin).substring(1).toLowerCase(); // retourne l'extension du fichier cherché
-        let chemin_abs = "";
-        if(extension === 'ico' || extension === 'png'){ 
-            chemin_abs = __dirname + "/site_client/favicon_io" + chemin;
+        else if (err){
+            console.log(`Erreur interne pour lire ${chemin_total}`);
+            res.writeHead(500);
+            res.end();
         }
         else{
-            chemin_abs = __dirname + "/site_client" + chemin;
-        }
+            let extension = chemin_total.split(".").last();
 
-        fs.readFile(chemin_abs, (err, data) => {
-            if (err) 
-                return_404(res);
-            else{
-                res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
-                res.write(data);
-                res.end();
-            }
-        })
-    }
+            res.writeHead(200, { "Content-Type": MIME_TYPES[extension] || MIME_TYPES.default });
+            res.end(data);
+        }
+    })
 }
 
 async function login(){
 
 }
 
-async function traitement_api(requete_api, url, req, res){
-    let requetes_api = API[req.method];
-    let actions = requetes_api ? requetes_api[requete_api] : undefined;
+async function traitement_endpoint(nom_endpoint, url, req, res){
+    let endpoints = ENDPOINTS[req.method];
+    let endpoint = endpoints ? endpoints[nom_endpoint] : undefined;
 
-    if(!requetes_api){
+    if(!endpoint){
         res.writeHead(404);
         res.end();
         return;
@@ -128,8 +119,14 @@ async function traitement_api(requete_api, url, req, res){
 
     let {authentification_required, process} = actions;
 
+    let user = null;
     if(authentification_required){
-
+        // user = await authentification
+        if (user === null){
+            res.writeHead(401, "Invalid Authentification");
+            res.end();
+            return;
+        }
     }
 
     process(req, res, url, user);
@@ -138,7 +135,7 @@ async function traitement_api(requete_api, url, req, res){
 
 // serveur qui toune au port 8000 
 
-const serveur = http.createServer(async (req, res) => {
+const serveur2 = http.createServer(async (req, res) => {
     const url = new URL(`http://localhost${req.url}`);
 
     if(req.url.startsWith("/api/")){
@@ -197,15 +194,35 @@ const serveur = http.createServer(async (req, res) => {
                 await retourne_page_client_dynamique(chemin, res, modif_html);
             }
             else{
-                await retourne_page_client_statique(URL.pathname, res); 
+                await retourne_page_client_statique(url.pathname, res); 
             }
         }
     }
     console.log(`${req.method} ${req.url}`);
 })
 
+const serveur = http.createServer((req, res) => {
+    console.log(`${req.method} ${req.url}`);
+    let url = new URL(`http://localhost${req.url}`);
+
+    if (req.url.startsWith("/api/")){
+        let endpoint = url.pathname.slice(4);
+        //serve_endpoint
+        res.end();
+    }
+    else{
+        if(req.method === "GET"){
+            serveur_statique(url, res);
+        }
+        else{
+            res.writeHead(405);
+            res.end();
+        }
+    }
+});
+
 DB.init().then(() => {
-    serveur.listen(port, () => console.log(`Le serveur tourne au port ${port}`));
+    serveur.listen(PORT, () => console.log(`Serveur démarré au port ${PORT}`));
 }).catch((err)=>{
     console.error(err);
     process.exit(1);

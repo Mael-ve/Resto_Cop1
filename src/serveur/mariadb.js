@@ -28,20 +28,41 @@ async function init(){
 
     return new Promise((resolve, reject) => {
         conn.query(
-            'CREATE TABLE IF NOT EXISTS todo_items (id varchar(36), name varchar(255), completed boolean)',
+            `CREATE TABLE IF NOT EXISTS commentateur (
+                id int(255) unsigned NOT NULL,
+                pseudo varchar(50),
+                lien_tete varchar(255) DEFAULT NULL,
+                mdp varchar(50),
+                PRIMARY KEY (id) )`,
             (err) => {
                 if (err) return reject(err);
 
-                console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
-                resolve();
+                conn.query(`CREATE TABLE IF NOT EXISTS restaurants (
+                                nom varchar(255),
+                                type_resto varchar(255),
+                                localisation varchar(255),
+                                ville varchar(255),
+                                id_commentateur int(255) unsigned NOT NULL REFERENCES commentateur(id), 
+                                coup_coeur bool,
+                                commentaire TEXT,
+                                prix TEXT,
+                                date_ajout DATETIME, 
+                                PRIMARY KEY (nom)
+                            )`,
+                        (err) => {
+                            if (err) return reject(err);
+
+                            console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
+                            resolve();
+                        });
             }
         ); 
     });
 }
 
-async function get_resto(URL, res){
+async function get_resto(url, res){
     //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
-    const filtre = querystring.parse(URL.query).filtre;
+    const filtre = querystring.parse(url.query).filtre;
     try{
         const results = await conn.query(requete_sql[filtre]);
         res.writeHead(200);
