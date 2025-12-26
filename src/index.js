@@ -84,6 +84,8 @@ async function retourne_page_client_dynamique(chemin, res, modif){
 
 async function retourne_page_client_statique(chemin, res){
     //retourne un fichier demandé par le chemin
+    chemin = String(chemin);
+    
     if(true || !chemin.match(/\.\./)){ //vérfie s'il n'y pas /.. dans l'url pour la sécurité
         if (chemin === "/"){ 
             chemin = "/index.html";
