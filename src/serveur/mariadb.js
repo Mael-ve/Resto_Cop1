@@ -22,33 +22,45 @@ async function init(){
 
     return new Promise((resolve, reject) => {
         conn.query(
-            `CREATE TABLE IF NOT EXISTS commentateur (
-                id int(255) unsigned NOT NULL,
-                pseudo varchar(50),
-                lien_tete varchar(255) DEFAULT NULL,
-                mdp varchar(50),
-                PRIMARY KEY (id) )`,
+            `CREATE TABLE IF NOT EXISTS commentateurs(
+                id INT(255) UNSIGNED NOT NULL AUTO_INCREMENT,
+                identifiant VARCHAR(50),
+                lien_tete VARCHAR(255) DEFAULT NULL,
+                mdp VARCHAR(50),
+                PRIMARY KEY(id) )`,
             (err) => {
                 if (err) return reject(err);
 
                 conn.query(`CREATE TABLE IF NOT EXISTS restaurants (
-                                nom varchar(255),
-                                type_resto varchar(255),
-                                localisation varchar(255),
-                                ville varchar(255),
-                                id_commentateur int(255) unsigned NOT NULL REFERENCES commentateur(id), 
-                                coup_coeur bool,
-                                commentaire TEXT,
-                                prix TEXT,
+                                id INT(255) UNSIGNED NOT NULL AUTO_INCREMENT,
+                                nom VARCHAR(255),
+                                type_resto VARCHAR(255),
+                                adresse VARCHAR(255),
+                                ville VARCHAR(255),
+                                id_commentateur int(255) UNSIGNED NOT NULL, 
                                 date_ajout DATETIME, 
-                                PRIMARY KEY (nom)
-                            )`,
+                                PRIMARY KEY (id),
+                                FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
                     (err) => {
                         if (err) return reject(err);
+                        
+                        conn.query(`CREATE TABLE commentaire (
+                                        id_resto INT(255) UNSIGNED NOT NULL,
+                                        id_commentateur INT(255) UNSIGNED NOT NULL,
+                                        coup_coeur BOOL,
+                                        commentaire TEXT,
+                                        prix TEXT,
+                                        FOREIGN KEY (id_resto) REFERENCES restaurants (id),
+                                        FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
+                            (err) => {
+                                if (err) return reject(err);
 
-                        console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
-                        resolve();
-                    });
+                                console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
+                                resolve();
+                            }
+                        );
+                    }
+                );
             }
         ); 
     });
