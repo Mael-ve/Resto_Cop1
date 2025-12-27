@@ -4,8 +4,8 @@
 C'est un site qui est sensé répertorié les recommendations de restaurants des personnes enregistrés en tant que commentateur dont tout le monde peut avoir accès aux recommendations. 
 
 ## Faire tourner le site Web 
-Il faut créer un fichier DB.env qui contient les paramètres secret de notre base de données de la forme :
-``` DB_PASSWORD=password_root \n DB_NAME=nom_de_bdd ```
+Il faut créer un fichier DB.env qui contient les paramètres secret de notre base de données de la forme : ``` DB_PASSWORD=password_root``` et ```DB_NAME=nom_de_bdd ``` 
+(le nom de base de données est pas forcément secret masi t'inquiète)
 
 Ensuite à l'aide de docker (à installer) il faut lancer la commande :
 ``` docker compose --env-file DB.env up ```
