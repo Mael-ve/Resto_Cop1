@@ -1,13 +1,13 @@
 // Importation des modules/Frameworks utiles 
 
-const url = require("node:url");
 const http = require("http");
-const stream = require("node:stream")
 const fs = require("fs");
-const path = require("node:path");
-const querystring = require('querystring');
 const jwt = require('jsonwebtoken');
-const { createConnection } = require("node:net");
+const { scrypt, timingSafeEqual } = require("crypto");
+const { promisify } = require("util");
+
+const scryptAsync = promisify(scrypt);
+const jwtVerifyAsync = promisify(jwt.verify);
 
 const DB = require('./serveur/mariadb.js');
 
@@ -16,6 +16,7 @@ const DB = require('./serveur/mariadb.js');
 
 const PORT = 8000;
 const SECRET_KEY = 'Bloup-Bloup'; //clé d'encodage des jwt 
+const SALT = 'salt';
 
 const MIME_TYPES = {
     default: "application/octet-stream",
@@ -31,16 +32,34 @@ const MIME_TYPES = {
 
 const ENDPOINTS={
     "GET": {
-        //"/me": {authentification_required  : true, process: api_me},
+        "/me": {authentification_required  : true, process: api_me},
         "/get_resto": {authentification_required : false, process: DB.get_resto}
     },
     "POST": {
-        "/login" : { process: login}
+        "/login" : { process: login},
+        "/add_resto": { authentification_required: true, process: DB.add_resto }
     }
 }
 
 Array.prototype.last = function () {
     return this[this.length - 1];
+}
+
+async function hash_password(password) {
+    let buf = await scryptAsync(password, SALT, 64);
+    return buf.toString("hex");
+}
+
+function read_body(req) {
+    return new Promise((resolve, _reject) => {
+        let body = "";
+        req.on('data', (chunk) => {
+            body += chunk;
+        });
+        req.on('end', () => {
+            resolve(body)
+        });
+    });
 }
  
 // traitement des requêtes du client
@@ -103,9 +122,72 @@ function serveur_statique(url, res){
     })
 }
 
-async function login(){
-
+function api_me(_, res, _, user) {
+    res.end(JSON.stringify(user));
 }
+
+async function login(req, res){
+    let body = await read_body(req);
+    let json;
+    try {
+        json = JSON.parse(body);
+    } catch (e) {
+        res.writeHead(400, "Not JSON");
+        res.end();
+        return;
+    }
+
+    let { username, password } = json;
+
+    if (!username) {
+        res.writeHead(400, "No username specified");
+        res.end();
+        return;
+    }
+    if (!password && password !== "") {
+        res.writeHead(400, "No password specified");
+        res.end();
+        return;
+    }
+
+    let identifiant = await DB.retourne_identification(username)
+    if (!identifiant[0]) {
+        res.writeHead(401, "Invalid username");
+        res.end();
+        return;
+    }
+
+    let { id, mdp } = identifiant[0];
+
+    let hashed_password = await hash_password(password);
+
+    if (!timingSafeEqual(Buffer.from(mdp, "hex"), Buffer.from(hashed_password, "hex"))) {
+        res.writeHead(401, "Invalid password");
+        res.end();
+        return;
+    }
+
+    let payload = { id, username, exp: Date.now() + 30 * 60 };
+    let token = jwt.sign(payload, SECRET_KEY);
+
+    res.writeHead(200);
+    res.end(JSON.stringify({ token }))
+}
+
+async function authentification(req) {
+    if (!req.headers)
+        return null;
+
+    let token = req.headers["authorization"]
+
+    try {
+        let { id, username, exp: _ } = await jwtVerifyAsync(token, SECRET_KEY);
+        return { id, username };
+    } catch (error) {
+        return null;
+    }
+}
+
 
 async function traitement_endpoint(nom_endpoint, url, req, res){
     let endpoints = ENDPOINTS[req.method];
@@ -117,11 +199,11 @@ async function traitement_endpoint(nom_endpoint, url, req, res){
         return;
     }
 
-    let {authentification_required, process} = actions;
+    let {authentification_required, process} = endpoint;
 
     let user = null;
     if(authentification_required){
-        // user = await authentification
+        user = await authentification(req);
         if (user === null){
             res.writeHead(401, "Invalid Authentification");
             res.end();
@@ -135,80 +217,13 @@ async function traitement_endpoint(nom_endpoint, url, req, res){
 
 // serveur qui toune au port 8000 
 
-const serveur2 = http.createServer(async (req, res) => {
-    const url = new URL(`http://localhost${req.url}`);
-
-    if(req.url.startsWith("/api/")){
-        let requete_api = url.pathname.slice(4);
-        traitement_api(requete_api, url, req, res);
-    }
-
-    if(req.method === 'POST'){ //si la requete est de type post -> c'est une demande de connexion
-        let  body = "";
-        req.on('data', (chunck) =>{
-            body += chunck.toString('utf8');
-            
-        });
-        req.on('end', ()=>{
-            if(URL.pathname === "/connexion.html"){
-                const identifiant = querystring.parse(body);
-                verification_identification(identifiant, res);
-            }
-            else{ // si c'est pas connexion.html c'est que c'est une verification de connexion et que le body contient un token jwt
-                jwt.verify(body, SECRET_KEY, (err, decoded) => {
-                    if(err){ // si y'a une erreur c'est que body contient un token faux ou expirer
-                        console.log(err);
-                        res.writeHead(200);
-                        res.write("false");
-                        res.end();
-                    }
-                    else{
-                        res.writeHead(200);
-                        res.write("true");
-                        res.end();
-                    }
-                })
-            }
-        })
-    }else{
-        if(false&&URL.pathname.includes("/api/")){ //requete à la base de donnée
-            await DB.get_resto(URL, res);
-        }
-        else{
-            if(URL.query != null){ // si y'a une query c'est une page où l'on doit modifier le code html coté serveur
-                let chemin = URL.pathname;
-                let modif_html = querystring.parse(URL.query).modif === undefined ? " " : querystring.parse(URL.query).modif;
-                let request = querystring.parse(URL.query);
-                if(URL.pathname === "/ajout_resto.html"&&request.nom_resto != undefined){ // Si on chercher à ajouter un resto 
-                    modif_html = await jwt.verify(req.headers.cookie, SECRET_KEY, async (err, decoded) => { //on verifie le jeton de connexion
-                        let modif_tempo = modif_html;
-                        if(err){
-                            modif_tempo="Il y'a eu une erreur, merci de vous reconnecter";
-                        }
-                        else{
-                            modif_tempo = await DB.requete_add_resto(request, decoded.id);
-                        }
-                        return modif_tempo;
-                    });
-                }
-                await retourne_page_client_dynamique(chemin, res, modif_html);
-            }
-            else{
-                await retourne_page_client_statique(url.pathname, res); 
-            }
-        }
-    }
-    console.log(`${req.method} ${req.url}`);
-})
-
 const serveur = http.createServer((req, res) => {
     console.log(`${req.method} ${req.url}`);
     let url = new URL(`http://localhost${req.url}`);
 
     if (req.url.startsWith("/api/")){
         let endpoint = url.pathname.slice(4);
-        //serve_endpoint
-        res.end();
+        traitement_endpoint(endpoint, url, req, res);
     }
     else{
         if(req.method === "GET"){
@@ -220,6 +235,7 @@ const serveur = http.createServer((req, res) => {
         }
     }
 });
+
 
 DB.init().then(() => {
     serveur.listen(PORT, () => console.log(`Serveur démarré au port ${PORT}`));

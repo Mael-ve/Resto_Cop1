@@ -2,12 +2,6 @@ const waitPort = require('wait-port');
 const fs = require('fs');
 const mariadb = require('mariadb/callback');
 
-const requete_sql = { //dictionnaire (clé : filtre appliqué a la base de donnée, valeur: requete sql associé)
-    "": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants ORDER BY date_ajout DESC LIMIT 10`,
-    "lyon": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="lyon"`,
-    "paris": `SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville="paris"`
-}; 
-
 let conn;
 
 async function init(){
@@ -49,99 +43,63 @@ async function init(){
                                 date_ajout DATETIME, 
                                 PRIMARY KEY (nom)
                             )`,
-                        (err) => {
-                            if (err) return reject(err);
+                    (err) => {
+                        if (err) return reject(err);
 
-                            console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
-                            resolve();
-                        });
+                        console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
+                        resolve();
+                    });
             }
         ); 
     });
 }
 
-async function get_resto(url, res){
+async function get_resto(_, res, url, _){
     //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
-    const filtre = querystring.parse(url.query).filtre;
-    try{
-        const results = await conn.query(requete_sql[filtre]);
-        res.writeHead(200);
-        res.end(JSON.stringify(results));
-    }
-    catch (err){
-        console.log(err);
-        res.writeHead(500);
+    let ville = url.searchParams.get("ville");
+    if (!ville) {
+        res.writeHead(400, "No ville specified");
         res.end();
+        return;
     }
+
+    let restaurants = await connection.query("SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville = ?", ville.toLowerCase());
+
+    res.writeHead(200);
+    res.end(JSON.stringify(restaurants));
 }
 
-async function requete_add_resto(request, id_commentateur){ 
-    //fonction qui traite la requete url contenant un restaurant et ajoute le restaurant à la base de donnée
-    let message = "Merci d'avoir ajouter un restaurant !";
-    let est_vide = false;
-    for(const [key, value] of Object.entries(request)){
-        if(key === 'modif'){
-            continue;
-        }
-        else{
-            if(value === ''){
-                est_vide = true
-            }
-        }
-    }
-    if(!est_vide){
-        try{
-            await conn.query(
-            `INSERT INTO restaurants VALUES(
-            "${request.nom_resto.toLowerCase()}",
-            "${request.type_resto.toLowerCase()}",
-            "${request.adresse}",
-            "${request.ville.toLowerCase()}",
-            ${id_commentateur}, 
-            ${request.coup_coeur === null}, 
-            "${request.commentaire}", 
-            "${request.prix}",
-            now() )`
-            );
+async function add_resto(req, res, _, user) {
+    let body = read_body(req);
+    let json = JSON.parse(body);
 
+    function check_exists(val) {
+        if (!json[val]) {
+            res.writeHead(400, `No ${val} field in body`);
+            res.end();
+            return false;
         }
-        catch(err){
-            message = "il y'a une erreur de bdd";
-        }
-    } 
-    else{
-        message = "Merci de remplir toutes les cases";
+        return true;
     }
-    return message;
+
+    if (!(check_exists("nom_resto") && check_exists("type_resto") && check_exists("adresse") && check_exists("ville") && check_exists("coup_coeur") && check_exists("commentaire") &&
+        check_exists("prix"))) return;
+
+    await connection.query(
+        "INSERT INTO restaurants VALUES(?, ?, ?, ?, ?, ?, ?, ?, now())", json.nom_resto.toLowerCase(), json.type_resto.toLowerCase(), json.adresse, json.ville.toLowerCase(),
+        user.id, json.coup_coeur, json.commetaire, json.prix
+    );
+    res.writeHead(200);
+    res.end();
 }
 
-async function verification_identification(identifiant, res){
-    //fonction qui verifie l'authentification d'un utilisateur
-    try{
-        const param_recu = await conn.query(
-            `SELECT id, mdp FROM commentateur WHERE pseudo="${identifiant.username}"`
-        );
-        const param = param_recu[0];
-        if(param.mdp === identifiant.mdp){
-            const payload = {id : param.id, username : identifiant.username, exp: Date.now() + 30*60};
-            const token = jwt.sign(payload, SECRET_KEY);
-            res.setHeader('Set-cookie',`cookie: ${token}; Expires: ${Date.now() + 2*60*1000}`);
-            console.log("le jeton de connexion est valide et est bien mis dans les cookies");
-            await retourne_page_client_dynamique("/ajout_resto.html", res, "");
-        }
-        else{
-            retourne_page_client_dynamique("/connexion.html", res, "Le mot de passe n'est pas bon");
-        }
-    }
-    catch(err){
-        console.log(err);
-        retourne_page_client_dynamique("/connexion.html", res, "L'identifaint n'existe pas");
-    }
+function retourne_identification(username){
+    return connection.query("SELECT id, mdp FROM commentateur WHERE pseudo = ?", username);
 }
 
 module.exports = {
     init,
     get_resto,
-    requete_add_resto,
-    verification_identification,
+    add_resto,
+    retourne_identification,
 };
