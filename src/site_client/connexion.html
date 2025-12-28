@@ -15,10 +15,10 @@
 
 		<ul id="menu"> 
 			<li class="sous_menu"><a href = "index.html"> Liste des Restaurants </a> </li>
-            <li class="sous_menu" style="float:right"><a href = "ajout_resto.html?modif="> Ajouter un Restaurant </a> </li>
+            <li class="sous_menu" style="float:right"><a onclick="menu_add_resto()""> Ajouter un Restaurant </a> </li>
 		</ul>
 		
-		<form method="POST" action="/api/login">
+		<div id="form">
 			<h2>CONNEXION</h2>
 
 			<ul>
@@ -33,9 +33,11 @@
 				</li>
 			</ul>
 			
-			<button type="submit">Se Connecter</button>
-			<div id="message_erreur">{{texte_a_modifier}}</div>
-		</form>
-		
+			<button onclick="login()">Se Connecter</button>
+			<div id="message_erreur"></div>
+		</div>
+
+		<script type="text/javascript" src="connexion.js"></script>
+		<script type="text/javascript" src="menu.js"></script>
 	</body>
 </html>

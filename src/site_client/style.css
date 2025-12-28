@@ -72,8 +72,8 @@ li.sous_menu a:hover{
 } 
 
 
-/* Formulaire des nouveaux resto  */
-form{
+/* Formulaire */
+#form{
     margin: 3em auto;
     width: 500px;
     padding: 2em;

@@ -237,7 +237,9 @@ const serveur = http.createServer((req, res) => {
 });
 
 
-DB.init().then(() => {
+DB.init().then(async () => {
+    let hash_pwd = await hash_password("test");
+    DB.ajout_commmentateur_test(hash_pwd);
     serveur.listen(PORT, () => console.log(`Serveur démarré au port ${PORT}`));
 }).catch((err)=>{
     console.error(err);

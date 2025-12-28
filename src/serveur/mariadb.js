@@ -23,35 +23,33 @@ async function init(){
     return new Promise((resolve, reject) => {
         conn.query(
             `CREATE TABLE IF NOT EXISTS commentateurs(
-                id INT(255) UNSIGNED NOT NULL AUTO_INCREMENT,
                 identifiant VARCHAR(50),
                 lien_tete VARCHAR(255) DEFAULT NULL,
-                mdp VARCHAR(50),
-                PRIMARY KEY(id) )`,
+                mdp VARCHAR(255),
+                PRIMARY KEY(identifiant) )`,
             (err) => {
                 if (err) return reject(err);
 
                 conn.query(`CREATE TABLE IF NOT EXISTS restaurants (
-                                id INT(255) UNSIGNED NOT NULL AUTO_INCREMENT,
                                 nom VARCHAR(255),
                                 type_resto VARCHAR(255),
                                 adresse VARCHAR(255),
                                 ville VARCHAR(255),
-                                id_commentateur int(255) UNSIGNED NOT NULL, 
+                                id_commentateur VARCHAR(50), 
                                 date_ajout DATETIME, 
-                                PRIMARY KEY (id),
-                                FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
+                                PRIMARY KEY (nom),
+                                FOREIGN KEY (id_commentateur) REFERENCES commentateurs (identifiant) )`,
                     (err) => {
                         if (err) return reject(err);
                         
-                        conn.query(`CREATE TABLE commentaire (
-                                        id_resto INT(255) UNSIGNED NOT NULL,
-                                        id_commentateur INT(255) UNSIGNED NOT NULL,
+                        conn.query(`CREATE TABLE IF NOT EXISTS commentaires (
+                                        id_resto VARCHAR(50),
+                                        id_commentateur VARCHAR(50),
                                         coup_coeur BOOL,
                                         commentaire TEXT,
                                         prix TEXT,
-                                        FOREIGN KEY (id_resto) REFERENCES restaurants (id),
-                                        FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
+                                        FOREIGN KEY (id_resto) REFERENCES restaurants (nom),
+                                        FOREIGN KEY (id_commentateur) REFERENCES commentateurs (identifiant) )`,
                             (err) => {
                                 if (err) return reject(err);
 
@@ -66,6 +64,21 @@ async function init(){
     });
 }
 
+function query(sql, params) {
+    return new Promise((resolve, reject) => {
+        conn.query(sql, params, (error, results) => {
+            if (error) return reject(error);
+            resolve(results);
+        });
+    })
+}
+
+async function ajout_commmentateur_test(hash_pwd){
+    // fonction pour mettre un commentateur pour les test de login
+    await conn.query("INSERT INTO commentateurs VALUES('admin', NULL, ?)", [hash_pwd]);
+    console.log("l'ajout du commentateur test a été fait");
+}
+
 async function get_resto(_, res, url, _){
     //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
     let ville = url.searchParams.get("ville");
@@ -75,7 +88,7 @@ async function get_resto(_, res, url, _){
         return;
     }
 
-    let restaurants = await connection.query("SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville = ?", ville.toLowerCase());
+    let restaurants = await conn.query("SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville = ?", ville.toLowerCase());
 
     res.writeHead(200);
     res.end(JSON.stringify(restaurants));
@@ -97,20 +110,23 @@ async function add_resto(req, res, _, user) {
     if (!(check_exists("nom_resto") && check_exists("type_resto") && check_exists("adresse") && check_exists("ville") && check_exists("coup_coeur") && check_exists("commentaire") &&
         check_exists("prix"))) return;
 
-    await connection.query(
-        "INSERT INTO restaurants VALUES(?, ?, ?, ?, ?, ?, ?, ?, now())", json.nom_resto.toLowerCase(), json.type_resto.toLowerCase(), json.adresse, json.ville.toLowerCase(),
-        user.id, json.coup_coeur, json.commetaire, json.prix
+    await conn.query(
+        `INSERT INTO restaurants  VALUES( ?, ?, ?, ?, ?, now())`
+        , json.nom_resto.toLowerCase(), json.type_resto.toLowerCase(), json.adresse, json.ville.toLowerCase(),
+        user.id,
     );
     res.writeHead(200);
     res.end();
 }
 
-function retourne_identification(username){
-    return connection.query("SELECT id, mdp FROM commentateur WHERE pseudo = ?", username);
+async function retourne_identification(username){
+    let r = await query("SELECT identifiant, mdp FROM commentateurs WHERE identifiant = ?", [username])
+    return r;
 }
 
 module.exports = {
     init,
+    ajout_commmentateur_test,
     get_resto,
     add_resto,
     retourne_identification,
