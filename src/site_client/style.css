@@ -2,14 +2,14 @@
 body { 
     font-family: "Montserrat", sans-serif;
     color : white;
-    background-color : #d4bc5b;
+    background-color : #E9F1FC;
 }
 
 /* Titre */
 h1 {
     color: black; 
     border: 2px solid Black; 
-    background-color:#e0d5a6;
+    background-color:#C4E0FF;
     padding: 20px;
     text-align:center;
     border-radius: 10px;
@@ -29,7 +29,7 @@ ul#menu {
     margin:0;
     padding:0;
     overflow:hidden;
-        background-color: #e0d5a6;
+        background-color: #C4E0FF;
     position: sticky;	
     top:10px;
     width:100%;
@@ -74,14 +74,15 @@ li.sous_menu a:hover{
 
 /* Formulaire */
 #form{
+    color: black;
     margin: 3em auto;
     width: 500px;
     padding: 2em;
-    border: 1px solid #ccc;
+    border: 1px solid #120e0e;
     border-radius: 1em;
 }
 
-ul#form{
+ul#form_{
     list-style: none;
     padding: 0;
     margin: 0;

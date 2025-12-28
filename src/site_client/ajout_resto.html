@@ -14,25 +14,25 @@
 		<h1> LE TRIPADVISOR DES COPAINS </h1>
 		<ul id="menu"> 
 			<li class="sous_menu"><a href = "index.html"> Liste des Restaurants </a> </li>
-            <li class="sous_menu" style="float:right"><a href = "ajout_resto.html?modif="> Ajouter un Restaurant </a> </li>
+            <li class="sous_menu" style="float:right"><a onclick="menu_add_resto()"> Ajouter un Restaurant </a> </li>
 		</ul>
 
-        <form>
+        <div id="form">
             <h2>Votre nouveau Restaurant</h2>
 
-            <ul id="form">
+            <ul id="form_">
                 <li>
-                    <label for="nom_resto">Nom du restaurant :</label>
+                    <label for="nom_resto">Nom du restaurant* :</label>
                     <input type="text" id="nom_resto" name="nom_resto"/>
                 </li>
 
                 <li>
-                    <label for="type_resto">Type du resto :</label>
+                    <label for="type_resto">Type du resto* :</label>
                     <input type="text" id="type_resto" name="type_resto"/>
                 </li>
 
                 <li>
-                    <label for="adresse">Adresse exact :</label>
+                    <label for="adresse">Adresse exact* :</label>
                     <input type="text" id="adresse" name="adresse"/>
                 </li>
 
@@ -42,7 +42,7 @@
                 </li> -->
 
                 <li>
-                    <label for="Ville"> Ville :</label>
+                    <label for="Ville"> Ville* :</label>
                     <input type="text" id="ville" name="ville"/>
                 </li>
 
@@ -62,10 +62,16 @@
                 </li>
             </ul>
 
-            <button type="submit">Publier le Restaurant</button>
+            <button onclick="add_resto()">Publier le Restaurant</button>
 
-            <div id="message_erreur">{{texte_a_modifier}}</div>
-        </form>
+            <div id="PS">
+                *obligatoire
+            </div>
+
+            <div id="message_erreur"></div>
+        </div>
         
+        <script type="text/javascript" src="menu.js"></script>
+        <script type="text/javascript" src="ajout_resto.js"></script>
     </body>
 </html>

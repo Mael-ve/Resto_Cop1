@@ -123,6 +123,7 @@ function serveur_statique(url, res){
 }
 
 function api_me(_, res, _, user) {
+    res.writeHead(200);
     res.end(JSON.stringify(user));
 }
 
