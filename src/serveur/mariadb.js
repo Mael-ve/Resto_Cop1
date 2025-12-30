@@ -37,6 +37,7 @@ async function init(){
                                 adresse VARCHAR(255),
                                 ville VARCHAR(255),
                                 id_commentateur INT(255), 
+                                coup_coeur BOOL,
                                 date_ajout DATETIME, 
                                 PRIMARY KEY (nom),
                                 FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
@@ -46,7 +47,6 @@ async function init(){
                         conn.query(`CREATE TABLE IF NOT EXISTS commentaires (
                                         id_resto VARCHAR(50),
                                         id_commentateur INT(255),
-                                        coup_coeur BOOL,
                                         commentaire TEXT DEFAULT NULL,
                                         prix TEXT DEFAULT NULL,
                                         FOREIGN KEY (id_resto) REFERENCES restaurants (nom),
@@ -83,9 +83,23 @@ async function ajout_commmentateur_test(hash_pwd){
 async function get_resto_grille(_, res, url, _){
     //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
     let ville = url.searchParams.get("ville");
+    let coup_coeur = url.searchParams.get("coup_coeur");
+
     let requete = "SELECT nom, type_resto, adresse FROM restaurants ";
+    let ajout_un_filtre = false;
+
     if (ville) {
         requete += `WHERE ville='${ville}' `;
+        ajout_un_filtre = true;
+    }
+
+    if(coup_coeur){
+        if(ajout_un_filtre){
+            requete += "AND coup_coeur=1 ";
+        }
+        else{
+            requete += "WHERE coup_coeur=1 ";
+        }
     }
 
     requete += "ORDER BY date_ajout DESC LIMIT 10";
@@ -125,14 +139,14 @@ async function add_resto(req, res, _, user) {
 
     try{
         await query(
-            "INSERT INTO restaurants VALUES(?, ?, ?, ?, ?, now())"
+            "INSERT INTO restaurants VALUES(?, ?, ?, ?, ?, ?, now())"
             , [json.nom_resto.toLowerCase(), json.type_resto.toLowerCase(), json.adresse, json.ville.toLowerCase(),
-            user.id]
+            user.id, json.coup_coeur]
         );
 
         await query(
-            "INSERT INTO commentaires VALUES(?, ?, ?, ?, ?)",
-            [json.nom_resto.toLowerCase(), user.id, json.coup_coeur, json["commentaire"] ? json["commentaire"] :"NULL", 
+            "INSERT INTO commentaires VALUES(?, ?, ?, ?)",
+            [json.nom_resto.toLowerCase(), user.id, json["commentaire"] ? json["commentaire"] :"NULL", 
         json["prix"] ? json["prix"] : "NULL"]
         );
 
