@@ -80,16 +80,17 @@ async function ajout_commmentateur_test(hash_pwd){
     console.log("l'ajout du commentateur test a été fait");
 }
 
-async function get_resto(_, res, url, _){
+async function get_resto_grille(_, res, url, _){
     //fonction qui renvoie les restaurants associés à une requete ne precisant que la ville du resto
     let ville = url.searchParams.get("ville");
-    if (!ville) {
-        res.writeHead(400, "No ville specified");
-        res.end();
-        return;
+    let requete = "SELECT nom, type_resto, adresse FROM restaurants ";
+    if (ville) {
+        requete += `WHERE ville='${ville}' `;
     }
 
-    let restaurants = await conn.query("SELECT nom, type_resto, localisation, coup_coeur FROM restaurants WHERE ville = ?", ville.toLowerCase());
+    requete += "ORDER BY date_ajout DESC LIMIT 10";
+
+    let restaurants = await query(requete);
 
     res.writeHead(200);
     res.end(JSON.stringify(restaurants));
@@ -152,7 +153,7 @@ async function retourne_identification(username){
 module.exports = {
     init,
     ajout_commmentateur_test,
-    get_resto,
+    get_resto_grille,
     add_resto,
     retourne_identification,
 };

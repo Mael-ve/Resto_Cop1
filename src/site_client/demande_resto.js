@@ -6,7 +6,7 @@ let liste_resto = [];
 // {nom: "Naanwich'riz", type_resto: "indien", localisation: "7 rue Désirée, au dessus de l’opéra", coup_coeur: 0}
 
 async function get_data(){
-    const reponse = await fetch(`/api/get_resto?filtre=`);
+    const reponse = await fetch(`/api/get_resto`);
     const data = await reponse.json();
     return data;
 }
@@ -26,6 +26,35 @@ const addDataHTML = () =>{
             `;
             liste_restoHTML.appendChild(newResto);
         })
+    }
+}
+
+async function filtre_resto(){
+    let requete = "/api/get_resto";
+    let checkboxes = window.document.getElementsByTagName('input');
+    let a_premier_element = false
+    for(var i = 0; i < checkboxes.length; i++){
+        if(checkboxes[i].checked){
+            let parent = checkboxes[i].closest("li");
+            if(a_premier_element){
+                requete += `&${parent.id}=${checkboxes[i].id}`;
+            }
+            else{
+                requete += `?${parent.id}=${checkboxes[i].id}`;
+                a_premier_element=true;
+            }
+        }
+    }
+    const reponse = await fetch(requete);
+    const data = await reponse.json();
+    liste_resto = await data;
+    addDataHTML();
+
+    let menu = document.getElementById("list-filtre");
+    if (menu.className === "") {
+        menu.className = "open";
+    } else {
+        menu.className = "";                    
     }
 }
 

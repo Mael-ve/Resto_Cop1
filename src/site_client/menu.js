@@ -1,3 +1,12 @@
+function showResponsiveMenu() {
+  let menu = document.getElementById("list-filtre");
+  if (menu.className === "") {
+    menu.className = "open";
+  } else {
+    menu.className = "";                    
+  }
+}
+
 function menu_add_resto() {
     let token = get_cookie("Token");
     if (token) {

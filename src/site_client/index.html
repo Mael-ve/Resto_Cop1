@@ -12,7 +12,32 @@
 		<h1> LE TRIPADVISOR DES COPAINS </h1>
 		
 		<ul id="menu"> 
-			<li class="sous_menu"><a href = "index.html"> Filtre </a> </li>
+			<li class="sous_menu"> 
+			<a id="burger" href="javascript:void(0);" onclick="showResponsiveMenu()"> Filtres </a>
+			<nav id="list-filtre">
+				<ul>
+					<li id="ville">
+						<h3>Villes</h3>
+
+						<label for="lyon">Lyon</label>
+						<input type="checkbox" id="lyon "name="lyon" value="unchecked" unchecked/>
+
+						<label for="paris">Paris</label>
+						<input type="checkbox" id="paris" name="paris" value="unchecked" unchecked/>
+					</li>
+
+					<li id="coup_coeur">
+						<label for="coup_coeur">Coup de coeur</label>
+						<input type="checkbox" id="coup_coeur" name="coup_coeur" value="unchecked" unchecked/>
+					</li>
+
+					<li>
+						<button onclick="showResponsiveMenu()">Annuler</button>
+						<button onclick="filtre_resto()">Appliquer</button>
+					</li>
+				</ul>
+			</nav>
+			</li>
             <li class="sous_menu" style="float:right"><a href = "ajout_resto.html?modif="> Ajouter un Restaurant </a> </li>
 		</ul>
 
@@ -21,4 +46,5 @@
 		
 	</body>
 	<script type="text/javascript" src="demande_resto.js"></script>
+	<script type="text/javascript" src="menu.js"></script>
 </html>

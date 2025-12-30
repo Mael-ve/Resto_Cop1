@@ -52,6 +52,69 @@ li.sous_menu a:hover{
     color:white;
 }
 
+h3{
+    color: black;
+}
+
+#list-filtre{
+    display: block;
+    position: absolute;
+    margin: 0;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+
+    z-index: 99;
+
+    transform-origin: 0% 0%;
+    transform: translate(-100%, 0);
+
+    transition: transform 0.5s cubic-bezier(0.77, 0.2, 0.05, 1);
+}
+
+#list-filtre ul{
+    display: flex;
+    flex-direction: column;
+
+    position: absolute;
+    margin: 0;
+    left: 0;
+    top: 20;
+
+    min-width: 30vw;
+    height: 100vh;
+    padding: 56px 0 0;
+
+    text-align: center;
+
+    background: #C4E0FF;
+    list-style-type: none;
+    -webkit-font-smoothing: antialiased;
+}
+
+#list-filtre button{
+    color: black;
+}
+
+#list-filtre li{
+    padding: 12px 24px;
+}
+
+#list-filtre label{
+    white-space: nowrap;
+    color: #333;
+    text-decoration: none;
+}
+
+#list-filtre.open {
+    transform: none;
+    position: fixed;
+}
+
+.type_filtre {
+    color: black;
+}
 
 /* Affichage de la liste des resto proposés */
 #Liste_resto{
@@ -63,7 +126,7 @@ li.sous_menu a:hover{
 }
 
 .resto{
-    background: #919191; /* trouver commment mettre de la transparence sur le gris (le fond seulement) */
+    background: #80B5D1; 
     border-radius : 10px;
     border : 3px solid black;
     display: flex;
