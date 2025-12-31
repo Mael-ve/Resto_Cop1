@@ -169,10 +169,10 @@ async function get_commentaire(_, res, url, _){
         return;
     }
 
-    let commentaires = query(`SELECT adresse, ville, prix, coup_coeur, commentaire, username
+    let commentaires = await query(`SELECT adresse, ville, prix, coup_coeur, commentaire, username
         FROM restaurants INNER JOIN 
         (commentaires INNER JOIN commentateurs ON id_commentateur=id)
-        ON id_resto=nom WHERE nom='${nom_resto}'`)
+        ON id_resto=nom WHERE nom='${nom_resto}'`);
 
     res.writeHead(200);
     res.end(JSON.stringify(commentaires));
