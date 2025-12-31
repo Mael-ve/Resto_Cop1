@@ -17,7 +17,7 @@ async function add_resto() {
     let type_resto = document.getElementById("type_resto").value;
     let adresse = document.getElementById("adresse").value;
     let ville = document.getElementById("ville").value;
-    let coup_coeur = document.getElementById("coeur").checked;
+    let coup_coeur = document.getElementById("coeur_form").checked;
     let commentaire = document.getElementById("commentaire").value;
     let prix = document.getElementById("prix").value;
 

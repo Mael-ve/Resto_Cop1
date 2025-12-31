@@ -118,14 +118,17 @@ h3{
 
 /* Affichage de la liste des resto proposés */
 #Liste_resto{
-    margin: 10px;
+    margin: 20px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    column-gap: 15px ;
-    row-gap:15px;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    grid-column-gap: 0px;
+    grid-row-gap: 14px;
 }
 
 .resto{
+    grid-column-start: 2;
+    grid-column-end: -2;
     background: #80B5D1; 
     border-radius : 10px;
     border : 3px solid black;
@@ -133,6 +136,12 @@ h3{
     flex-direction: column;
     text-align: center;
 } 
+
+.resto a{
+    text-decoration: none;
+    text-transform: capitalize;
+    color:#120e0e;
+}
 
 
 /* Formulaire */
@@ -165,4 +174,30 @@ button{
 /* message qui s'affiche lors de la soumission d'un formulaire */
 #message_erreur{
     color: red;
+}
+
+/* dessine un coeur */
+#coeur {
+    position: absolute;
+    width: 50px;
+    height: 45px;
+    margin: 10px;
+}
+#coeur:before,
+#coeur:after {
+    position: absolute;
+    content: "";
+    left: 25px;
+    top: 0;
+    width: 25px;
+    height: 40px;
+    background: red;
+    border-radius: 25px 25px 0 0;
+    transform: rotate(-45deg);
+    transform-origin: 0 100%;
+}
+#coeur:after {
+    left: 0;
+    transform: rotate(45deg);
+    transform-origin: 100% 100%;
 }

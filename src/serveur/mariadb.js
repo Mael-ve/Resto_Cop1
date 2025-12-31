@@ -85,7 +85,8 @@ async function get_resto_grille(_, res, url, _){
     let ville = url.searchParams.get("ville");
     let coup_coeur = url.searchParams.get("coup_coeur");
 
-    let requete = "SELECT nom, type_resto, adresse FROM restaurants ";
+    let requete = `SELECT nom, type_resto, ville, coup_coeur, username 
+                FROM restaurants INNER JOIN commentateurs ON id=id_commentateur `;
     let ajout_un_filtre = false;
 
     if (ville) {
