@@ -120,8 +120,8 @@ h3{
 #Liste_resto{
     margin: 20px;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(5, 1fr);
+    grid-template-columns: repeat(21, 1fr);
+    grid-template-rows: repeat(10, 1fr);
     grid-column-gap: 0px;
     grid-row-gap: 14px;
 }
@@ -135,6 +135,7 @@ h3{
     display: flex;
     flex-direction: column;
     text-align: center;
+    margin: 5px;
 } 
 
 .resto a{
@@ -200,4 +201,50 @@ button{
     left: 0;
     transform: rotate(45deg);
     transform-origin: 100% 100%;
+}
+
+/* style de la page d'affichage d'un resto */
+
+h2{
+    text-align: center;
+    color: black;
+}
+
+#list_commentaire{
+    margin: 20px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 10px;
+}
+
+#adresse{
+    grid-column: span 1 / span 1;
+    grid-row: span 1 / span 1;
+    grid-column-start: 5;
+    grid-row-start: 1;
+}
+
+#prix{
+    grid-column: span 1 / span 1;
+    grid-row: span 1 / span 1;
+    grid-column-start: 5;
+    grid-row-start: 2;
+}
+
+#adresse,
+#prix,
+.commentaire{
+    background: #80B5D1; 
+    border-radius : 10px;
+    border : 3px solid black;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin: 5px;
+    padding: 10px;
+}
+
+.commentaire{
+    grid-column: span 4/ span 4;
 }

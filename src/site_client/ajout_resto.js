@@ -15,11 +15,11 @@ async function is_authentification_valid(token) {
 async function add_resto() {
     let nom_resto = document.getElementById("nom_resto").value;
     let type_resto = document.getElementById("type_resto").value;
-    let adresse = document.getElementById("adresse").value;
+    let adresse = document.getElementById("adresse_form").value;
     let ville = document.getElementById("ville").value;
     let coup_coeur = document.getElementById("coeur_form").checked;
     let commentaire = document.getElementById("commentaire").value;
-    let prix = document.getElementById("prix").value;
+    let prix = document.getElementById("prix_form").value;
 
 
     let token = get_cookie("Token");

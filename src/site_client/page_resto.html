@@ -2,7 +2,7 @@
 <html>
 	<head>
         <meta charset="utf-8"/>
-		<title>{{texte_a_modifier}}</title>
+		<title>Takumi</title>
 		<link rel="stylesheet" href="style.css">
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,10 +13,43 @@
 		
 		<ul id="menu"> 
 			<li class="sous_menu"><a href = "index.html"> Liste des Restaurants </a> </li>
-            <li class="sous_menu" style="float:right"><a href = "ajout_resto.html?modif="> Ajouter un Restaurant </a> </li>
+            <li class="sous_menu" style="float:right"><a onclick="menu_add_resto()"> Ajouter un Restaurant </a> </li>
 		</ul>
 
-		
+		<span id='coeur'></span>
+
+		<h2>Takumi (LYON)</h2>
+
+		<div id="list_commentaire">
+
+			<div id="adresse">
+				<h3>ADRESSE</h3>
+				50 rue Franklin
+			</div>
+
+			<div id="prix">
+				<h3>PRIX</h3>
+				midi hors we et jour férié : menu ramen + gyoza 13,90€ parfait 
+				/ reste du temps : autour des 15€
+			</div>
+
+			<div class="commentaire">
+				<h3>Mael</h3>
+				Meilleur ramen de Lyon, adresse sympa pour un date ou une sortie avec peu de personnes(2-3 personnes) 
+				et propose d’autres petits plats japonais sympa aussi pour amener des gens qui sont pas trop ramen.
+				Option végétarienne disponible.
+			</div>
+
+			<div class="commentaire">
+				<h3>Angele</h3>
+				Clairement le meilleur ramen que j’ai mangé.
+			</div>
+
+		</div>
+
+
+		<script type="text/javascript" src="page_resto.js"></script>
+		<script type="text/javascript" src="menu.js"></script>
 		
 	</body>
 </html>

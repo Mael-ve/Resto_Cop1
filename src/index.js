@@ -33,7 +33,8 @@ const MIME_TYPES = {
 const ENDPOINTS={
     "GET": {
         "/me": {authentification_required  : true, process: api_me},
-        "/get_resto": {authentification_required : false, process: DB.get_resto_grille}
+        "/get_resto": {authentification_required : false, process: DB.get_resto_grille},
+        "/get_commentaire": {authentification_required: false, process: DB.get_commentaire}
     },
     "POST": {
         "/login" : { process: login},

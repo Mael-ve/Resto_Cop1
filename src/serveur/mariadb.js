@@ -38,6 +38,7 @@ async function init(){
                                 ville VARCHAR(255),
                                 id_commentateur INT(255), 
                                 coup_coeur BOOL,
+                                prix TEXT DEFAULT NULL,
                                 date_ajout DATETIME, 
                                 PRIMARY KEY (nom),
                                 FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
@@ -48,7 +49,6 @@ async function init(){
                                         id_resto VARCHAR(50),
                                         id_commentateur INT(255),
                                         commentaire TEXT DEFAULT NULL,
-                                        prix TEXT DEFAULT NULL,
                                         FOREIGN KEY (id_resto) REFERENCES restaurants (nom),
                                         FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
                             (err) => {
@@ -136,28 +136,46 @@ async function add_resto(req, res, _, user) {
         return true;
     }
 
-    if (!(check_exists("nom_resto") && check_exists("type_resto") && check_exists("adresse") && check_exists("ville") )) return;
+    if (!(check_exists("nom_resto") && check_exists("type_resto") && check_exists("adresse") && check_exists("ville") && check_exists("prix") )) return;
 
     try{
         await query(
-            "INSERT INTO restaurants VALUES(?, ?, ?, ?, ?, ?, now())"
+            "INSERT INTO restaurants VALUES(?, ?, ?, ?, ?, ?, ?, now())"
             , [json.nom_resto.toLowerCase(), json.type_resto.toLowerCase(), json.adresse, json.ville.toLowerCase(),
-            user.id, json.coup_coeur]
+            user.id, json.coup_coeur, json.prix.toLowerCase()]
         );
 
         await query(
-            "INSERT INTO commentaires VALUES(?, ?, ?, ?)",
-            [json.nom_resto.toLowerCase(), user.id, json["commentaire"] ? json["commentaire"] :"NULL", 
-        json["prix"] ? json["prix"] : "NULL"]
+            "INSERT INTO commentaires VALUES(?, ?, ?)",
+            [json.nom_resto.toLowerCase(), user.id, json["commentaire"] ? json["commentaire"] :"NULL"]
         );
 
         res.writeHead(200);
         res.end();
     }
     catch(error){
+        console.log(error);
         res.writeHead(406, `Il existe déjà un restaurant du nom de ${json.nom_resto}`);
         res.end();
     }
+}
+
+async function get_commentaire(_, res, url, _){
+    let nom_resto = url.searchParams.get("nom_resto");
+
+    if(!nom_resto){
+        res.writeHead(400, "Aucun resto n'est précisé");
+        res.end();
+        return;
+    }
+
+    let commentaires = query(`SELECT adresse, ville, prix, coup_coeur, commentaire, username
+        FROM restaurants INNER JOIN 
+        (commentaires INNER JOIN commentateurs ON id_commentateur=id)
+        ON id_resto=nom WHERE nom='${nom_resto}'`)
+
+    res.writeHead(200);
+    res.end(JSON.stringify(commentaires));
 }
 
 async function retourne_identification(username){
@@ -170,5 +188,6 @@ module.exports = {
     ajout_commmentateur_test,
     get_resto_grille,
     add_resto,
+    get_commentaire,
     retourne_identification,
 };
