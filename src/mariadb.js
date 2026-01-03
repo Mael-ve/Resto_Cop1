@@ -76,7 +76,7 @@ function query(sql, params) {
 
 async function ajout_commmentateur_test(hash_pwd){
     // fonction pour mettre un commentateur pour les test de login
-    await conn.query("INSERT INTO commentateurs VALUES(0, 'admin', NULL, ?)", [hash_pwd]);
+    await conn.query("INSERT INTO commentateurs (nom, mdp) VALUES('admin', ?)", [hash_pwd]);
     console.log("l'ajout du commentateur test a été fait");
 }
 
@@ -90,7 +90,7 @@ async function get_resto_grille(_, res, url, _){
     let ajout_un_filtre = false;
 
     if (ville) {
-        requete += `WHERE ville='${ville}' `;
+        requete += `WHERE ville='?' `;
         ajout_un_filtre = true;
     }
 
@@ -105,7 +105,7 @@ async function get_resto_grille(_, res, url, _){
 
     requete += "ORDER BY date_ajout DESC LIMIT 10";
 
-    let restaurants = await query(requete);
+    let restaurants = await query(requete, [ville]);
 
     res.writeHead(200);
     res.end(JSON.stringify(restaurants));
@@ -123,20 +123,21 @@ function read_body(req) {
     });
 }
 
+function check_exists(val, json) {
+    if (!json[val]) {
+        res.writeHead(400, `Le champ ${val} n'est pas rempli`);
+        res.end();
+        return false;
+    }
+    return true;
+}
+
 async function add_resto(req, res, _, user) {
     let body = await read_body(req);
     let json = JSON.parse(body);
 
-    function check_exists(val) {
-        if (!json[val]) {
-            res.writeHead(400, `Le champ ${val} n'est pas rempli`);
-            res.end();
-            return false;
-        }
-        return true;
-    }
-
-    if (!(check_exists("nom_resto") && check_exists("type_resto") && check_exists("adresse") && check_exists("ville") && check_exists("prix") )) return;
+    if (!(check_exists("nom_resto", json) && check_exists("type_resto", json) && check_exists("adresse", json) &&
+    check_exists("ville", json) && check_exists("prix", json) )) return;
 
     try{
         await query(
@@ -172,10 +173,32 @@ async function get_commentaire(_, res, url, _){
     let commentaires = await query(`SELECT adresse, ville, prix, coup_coeur, commentaire, username
         FROM restaurants INNER JOIN 
         (commentaires INNER JOIN commentateurs ON id_commentateur=id)
-        ON id_resto=nom WHERE nom='${nom_resto}'`);
+        ON id_resto=nom WHERE nom= ?`, [nom_resto]);
 
     res.writeHead(200);
     res.end(JSON.stringify(commentaires));
+}
+
+async function add_comment(req, res, _, user){
+    let body = await read_body(req);
+    let json = await JSON.parse(body);
+
+    if(!(check_exists("nom_resto", json)&&check_exists("commentaire", json))) return;
+
+    try{
+        await query(
+            "INSERT INTO commentaires VALUES(?, ?, ?)",
+            [json.nom_resto.toLowerCase(), user.id, json.commentaire]
+        );
+
+        res.writeHead(200);
+        res.end();
+    }
+    catch(error){
+        console.log(error);
+        res.writeHead(406, `${error}`)
+        res.end()
+    }
 }
 
 async function retourne_identification(username){
@@ -189,5 +212,6 @@ module.exports = {
     get_resto_grille,
     add_resto,
     get_commentaire,
+    add_comment,
     retourne_identification,
 };

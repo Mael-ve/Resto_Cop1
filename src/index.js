@@ -9,7 +9,7 @@ const { promisify } = require("util");
 const scryptAsync = promisify(scrypt);
 const jwtVerifyAsync = promisify(jwt.verify);
 
-const DB = require('./serveur/mariadb.js');
+const DB = require('./mariadb.js');
 
 
 // Constante du serveur 
@@ -38,7 +38,8 @@ const ENDPOINTS={
     },
     "POST": {
         "/login" : { process: login},
-        "/add_resto": { authentification_required: true, process: DB.add_resto }
+        "/add_resto": { authentification_required: true, process: DB.add_resto },
+        "/add_comment": {authentification_required:true, process: DB.add_comment}
     }
 }
 
@@ -65,24 +66,6 @@ function read_body(req) {
  
 // traitement des requêtes du client
 
-async function retourne_page_client_dynamique(chemin, res, modif){
-    //traite la demande d'une page html en replaçant dans la page {{texte_a_modifier}} par la ville demander dans URL.query
-    if(!chemin.match(/\.\./)){
-        const extension = path.extname(chemin).substring(1).toLowerCase();
-        fs.readFile(__dirname + "/site_client" + chemin, "binary", (err, data) =>{ // les fichiers pour pouvoir être modifier doivent etre ouvert en binary
-            if(err){
-                return_404(res);
-            }else{
-                let retour = data;
-                res.writeHead(200, {"Content-Type" : MIME_TYPES[extension] || MIME_TYPES.default});
-                retour = retour.replace(/{{texte_a_modifier}}/g, modif.toUpperCase());
-                res.write(retour);
-                res.end();
-            }
-        })
-    }
-}
-
 function serveur_statique(url, res){
     if(url.pathname.includes("..")){
         res.writeHead(400);
@@ -98,7 +81,7 @@ function serveur_statique(url, res){
         chemin = "/favicon_io/favicon.ico";
     }
 
-    let chemin_total = __dirname + "/site_client" + chemin;
+    let chemin_total = __dirname + "/../public" + chemin;
     console.log(`Renvoie ${chemin_total}`);
 
     fs.readFile(chemin_total, (err, data) => {
