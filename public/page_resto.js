@@ -54,7 +54,7 @@ function affiche_commentaire(commentaires){
         commentaires.forEach(comment => {
             list_comment.innerHTML += `
             <div class="commentaire">
-				<h3>${comment.username}</h3>
+				<h3>${comment.username.toUpperCase()}</h3>
                 ${comment.commentaire}
 			</div>
             `;
