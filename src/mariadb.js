@@ -23,7 +23,7 @@ async function init(){
     return new Promise((resolve, reject) => {
         conn.query(
             `CREATE TABLE IF NOT EXISTS commentateurs(
-                id INT(255),
+                id INT NOT NULL AUTO_INCREMENT,
                 username VARCHAR(50),
                 lien_tete VARCHAR(255) DEFAULT NULL,
                 mdp VARCHAR(255),
@@ -32,6 +32,7 @@ async function init(){
                 if (err) return reject(err);
 
                 conn.query(`CREATE TABLE IF NOT EXISTS restaurants (
+                                id INT NOT NULL AUTO_INCREMENT,
                                 nom VARCHAR(255),
                                 type_resto VARCHAR(255),
                                 adresse VARCHAR(255),
@@ -40,16 +41,16 @@ async function init(){
                                 coup_coeur BOOL,
                                 prix TEXT DEFAULT NULL,
                                 date_ajout DATETIME, 
-                                PRIMARY KEY (nom),
+                                PRIMARY KEY (id),
                                 FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
                     (err) => {
                         if (err) return reject(err);
                         
                         conn.query(`CREATE TABLE IF NOT EXISTS commentaires (
-                                        id_resto VARCHAR(50),
-                                        id_commentateur INT(255),
+                                        id_resto INT,
+                                        id_commentateur INT,
                                         commentaire TEXT DEFAULT NULL,
-                                        FOREIGN KEY (id_resto) REFERENCES restaurants (nom),
+                                        FOREIGN KEY (id_resto) REFERENCES restaurants (id),
                                         FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
                             (err) => {
                                 if (err) return reject(err);
@@ -76,7 +77,7 @@ function query(sql, params) {
 
 async function ajout_commmentateur_test(hash_pwd){
     // fonction pour mettre un commentateur pour les test de login
-    await conn.query("INSERT INTO commentateurs (nom, mdp) VALUES('admin', ?)", [hash_pwd]);
+    await conn.query("INSERT INTO commentateurs (username, mdp) VALUES('admin', ?)", [hash_pwd]);
     console.log("l'ajout du commentateur test a été fait");
 }
 
@@ -85,12 +86,12 @@ async function get_resto_grille(_, res, url, _){
     let ville = url.searchParams.get("ville");
     let coup_coeur = url.searchParams.get("coup_coeur");
 
-    let requete = `SELECT nom, type_resto, ville, coup_coeur, username 
-                FROM restaurants INNER JOIN commentateurs ON id=id_commentateur `;
+    let requete = `SELECT restaurants.id, nom, type_resto, ville, coup_coeur, username 
+                FROM restaurants INNER JOIN commentateurs ON commentateurs.id=id_commentateur `;
     let ajout_un_filtre = false;
 
     if (ville) {
-        requete += `WHERE ville='?' `;
+        requete += `WHERE ville = ? `;
         ajout_un_filtre = true;
     }
 
@@ -137,18 +138,23 @@ async function add_resto(req, res, _, user) {
     let json = JSON.parse(body);
 
     if (!(check_exists("nom_resto", json) && check_exists("type_resto", json) && check_exists("adresse", json) &&
-    check_exists("ville", json) && check_exists("prix", json) )) return;
+    check_exists("ville", json) && check_exists("prix", json) && check_exists("commentaire", json) )) return;
 
     try{
         await query(
-            "INSERT INTO restaurants VALUES(?, ?, ?, ?, ?, ?, ?, now())"
+            "INSERT INTO restaurants (nom, type_resto, adresse, ville, id_commentateur, coup_coeur, prix, date_ajout) VALUES(?, ?, ?, ?, ?, ?, ?, now())"
             , [json.nom_resto.toLowerCase(), json.type_resto.toLowerCase(), json.adresse, json.ville.toLowerCase(),
             user.id, json.coup_coeur, json.prix.toLowerCase()]
         );
 
+        let id_resto = await query(
+            "SELECT id FROM restaurants WHERE nom= ? AND adresse = ?", // on suppose que le couple nom et adresse sont uniques
+            [json.nom_resto.toLowerCase(), json.adresse]
+        )
+
         await query(
             "INSERT INTO commentaires VALUES(?, ?, ?)",
-            [json.nom_resto.toLowerCase(), user.id, json["commentaire"] ? json["commentaire"] :"NULL"]
+            [id_resto[0].id, user.id, json["commentaire"]]
         );
 
         res.writeHead(200);
@@ -156,24 +162,24 @@ async function add_resto(req, res, _, user) {
     }
     catch(error){
         console.log(error);
-        res.writeHead(406, `Il existe déjà un restaurant du nom de ${json.nom_resto}`);
+        res.writeHead(406, `Ce restaurant existe peut-être déjà`);
         res.end();
     }
 }
 
 async function get_commentaire(_, res, url, _){
-    let nom_resto = url.searchParams.get("nom_resto");
+    let id_resto = url.searchParams.get("id_resto");
 
-    if(!nom_resto){
+    if(!id_resto){
         res.writeHead(400, "Aucun resto n'est précisé");
         res.end();
         return;
-    }
+    } 
 
-    let commentaires = await query(`SELECT adresse, ville, prix, coup_coeur, commentaire, username
+    let commentaires = await query(`SELECT nom, adresse, ville, prix, coup_coeur, commentaire, username
         FROM restaurants INNER JOIN 
-        (commentaires INNER JOIN commentateurs ON id_commentateur=id)
-        ON id_resto=nom WHERE nom= ?`, [nom_resto]);
+        (commentaires INNER JOIN commentateurs ON id_commentateur=commentateurs.id)
+        ON id_resto=restaurants.id WHERE id_resto= ?`, [id_resto]);
 
     res.writeHead(200);
     res.end(JSON.stringify(commentaires));
@@ -183,12 +189,12 @@ async function add_comment(req, res, _, user){
     let body = await read_body(req);
     let json = await JSON.parse(body);
 
-    if(!(check_exists("nom_resto", json)&&check_exists("commentaire", json))) return;
+    if(!(check_exists("id_resto", json)&&check_exists("commentaire", json))) return;
 
     try{
         await query(
             "INSERT INTO commentaires VALUES(?, ?, ?)",
-            [json.nom_resto.toLowerCase(), user.id, json.commentaire]
+            [json.id_resto, user.id, json.commentaire]
         );
 
         res.writeHead(200);

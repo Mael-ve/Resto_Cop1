@@ -1,13 +1,13 @@
 let params = new URLSearchParams(location.search);
-let nom_resto = params.get("nom_resto")
+let id_resto = params.get("id_resto")
 
-if(!nom_resto){
+if(!id_resto){
     location.replace('/index.html');
     // si y'a pas de nom de resto, l'utilisateur est renvoyé à la page principale 
 }
 
 async function get_commentaire(){
-    const reponse = await fetch(`/api/get_commentaire?nom_resto=${nom_resto}`);
+    const reponse = await fetch(`/api/get_commentaire?id_resto=${id_resto}`);
     const data = await reponse.json();
     return data;
 }
@@ -16,11 +16,11 @@ function affiche_commentaire(commentaires){
 
     //modifie title
     let head = document.getElementsByTagName("title");
-    head[0].innerHTML = `${nom_resto.toUpperCase()}` ;
+    head[0].innerHTML = `${commentaires[0].nom.toUpperCase()}` ;
 
     //modifie le titre 
     let titre = document.getElementById("titre");
-    titre.innerHTML = `${nom_resto.toUpperCase()} (${commentaires[0].ville.toUpperCase()})`;
+    titre.innerHTML = `${commentaires[0].nom.toUpperCase()} (${commentaires[0].ville.toUpperCase()})`;
 
     //affiche un coeur si coup de coeur
     let emplacement_coeur = document.getElementById("emplacement_coeur");
@@ -59,10 +59,58 @@ function affiche_commentaire(commentaires){
 
 }
 
+async function is_authentification_valid(token) {
+    let r = await fetch("/api/me", { headers: { "authorization": token } });
+    return (r.status === 200);
+}
+
+async function affichage_admin(){
+    let token = get_cookie("Token");
+    let is_auth_valid = await is_authentification_valid(token);
+    if (!token || !is_auth_valid) {
+        return;
+    }
+
+    let list_comment = document.getElementById("list_commentaire");
+    list_comment.innerHTML += `
+        <div id="ajout_comment">
+			<label for="commentaire"> Nouveau Commentaire : </label>
+            <textarea id="commentaire" name="commentaire"></textarea>
+
+			<button onclick="add_comment()">Publier le commentaire</button>
+
+            <div id="message_erreur"></div>
+		</div>`;
+}
+
 async function init(){
     const data = await get_commentaire();
-    console.log(data);
     affiche_commentaire(data);
+    affichage_admin();
 }
 
 init();
+
+async function add_comment(){
+    let commentaire = document.getElementById("commentaire").value;
+
+    let token = get_cookie("Token");
+    if (!token) {
+        location.replace(`/connexion.html?next=/page_resto.html?id_resto=${id_resto}`);
+        return;
+    }
+
+    let r = await fetch("/api/add_comment", {
+        method: "POST", headers: { Authorization: token }, body: JSON.stringify({
+            id_resto, commentaire
+        }),
+    });
+
+    if (r.status === 200){
+        document.getElementById("message_erreur").innerText= "Merci d'avoir ajouté un nouveau Commentaire !";
+        location.reload();
+    }
+    else { 
+        document.getElementById("message_erreur").innerText = `Impossible d'ajouter un Commentaire: ${r.statusText}`;
+    }
+}

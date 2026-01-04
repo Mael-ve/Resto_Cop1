@@ -152,7 +152,7 @@ async function login(req, res){
         return;
     }
 
-    let payload = { id, username, exp: Date.now() + 30 * 60 };
+    let payload = { id, username, exp: Date.now() + 30 * 60 * 600 };
     let token = jwt.sign(payload, SECRET_KEY);
 
     res.writeHead(200);
@@ -166,7 +166,10 @@ async function authentification(req) {
     let token = req.headers["authorization"]
 
     try {
-        let { id, username, exp: _ } = await jwtVerifyAsync(token, SECRET_KEY);
+        let { id, username, exp} = await jwtVerifyAsync(token, SECRET_KEY);
+        if (Date.now() > exp){
+            return null;
+        }
         return { id, username };
     } catch (error) {
         return null;

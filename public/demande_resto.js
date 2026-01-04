@@ -22,7 +22,7 @@ const addDataHTML = () =>{
 
             // forme du resto dans sa grille
             newResto.innerHTML = `
-            <a href="page_resto.html?nom_resto=${resto.nom}">
+            <a href="page_resto.html?id_resto=${resto.id}">
             <h3>${resto.nom.toUpperCase()} (${resto.ville.toUpperCase()}) </h3>
             <p><b>${resto.type_resto}</b> proposé par <b>${resto.username}</b></p>  
             </a> `;
