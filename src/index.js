@@ -3,20 +3,20 @@
 const http = require("http");
 const fs = require("fs");
 const jwt = require('jsonwebtoken');
-const { scrypt, timingSafeEqual } = require("crypto");
+const { timingSafeEqual } = require("crypto");
 const { promisify } = require("util");
 
-const scryptAsync = promisify(scrypt);
 const jwtVerifyAsync = promisify(jwt.verify);
 
+const outils = require('./outils.js');
 const DB = require('./mariadb.js');
 
 
 // Constante du serveur 
 
-const PORT = 8000;
-const SECRET_KEY = 'Bloup-Bloup'; //clé d'encodage des jwt 
-const SALT = 'salt';
+const MDP_ADMIN = process.env.MDP_ADMIN || "test";
+const PORT = process.env.PORT || 8000;
+const SECRET_KEY = process.env.SECRET_KEY || 'Bloup-Bloup' ; //clé d'encodage des jwt 
 
 const MIME_TYPES = {
     default: "application/octet-stream",
@@ -46,23 +46,6 @@ const ENDPOINTS={
 
 Array.prototype.last = function () {
     return this[this.length - 1];
-}
-
-async function hash_password(password) {
-    let buf = await scryptAsync(password, SALT, 64);
-    return buf.toString("hex");
-}
-
-function read_body(req) {
-    return new Promise((resolve, _reject) => {
-        let body = "";
-        req.on('data', (chunk) => {
-            body += chunk;
-        });
-        req.on('end', () => {
-            resolve(body)
-        });
-    });
 }
  
 // traitement des requêtes du client
@@ -113,7 +96,7 @@ function api_me(_, res, _, user) {
 }
 
 async function login(req, res){
-    let body = await read_body(req);
+    let body = await outils.read_body(req);
     let json;
     try {
         json = JSON.parse(body);
@@ -145,7 +128,7 @@ async function login(req, res){
 
     let { id, mdp } = identifiant[0];
 
-    let hashed_password = await hash_password(password);
+    let hashed_password = await outils.hash_password(password);
 
     if (!timingSafeEqual(Buffer.from(mdp, "hex"), Buffer.from(hashed_password, "hex"))) {
         res.writeHead(401, "Invalid password");
@@ -227,7 +210,7 @@ const serveur = http.createServer((req, res) => {
 
 
 DB.init().then(async () => {
-    let hash_pwd = await hash_password("test");
+    let hash_pwd = await outils.hash_password(MDP_ADMIN);
     DB.ajout_commmentateur_test(hash_pwd);
     serveur.listen(PORT, () => console.log(`Serveur démarré au port ${PORT}`));
 }).catch((err)=>{

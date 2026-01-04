@@ -2,6 +2,7 @@ const waitPort = require('wait-port');
 const fs = require('fs');
 const mariadb = require('mariadb/callback');
 
+const outils = require("./outils.js")
 let conn;
 
 async function init(){
@@ -79,7 +80,7 @@ function query(sql, params) {
 
 async function ajout_commmentateur_test(hash_pwd){
     // fonction pour mettre un commentateur pour les test de login
-    await conn.query("INSERT INTO commentateurs (username, mdp) VALUES('admin', ?)", [hash_pwd]);
+    await conn.query("INSERT INTO commentateurs (username, mdp) VALUES('Malou', ?)", [hash_pwd]);
     console.log("l'ajout du commentateur test a été fait");
 }
 
@@ -114,18 +115,6 @@ async function get_resto_grille(_, res, url, _){
     res.end(JSON.stringify(restaurants));
 }
 
-function read_body(req) {
-    return new Promise((resolve, _reject) => {
-        let body = "";
-        req.on('data', (chunk) => {
-            body += chunk;
-        });
-        req.on('end', () => {
-            resolve(body)
-        });
-    });
-}
-
 function check_exists(val, json) {
     if (!json[val]) {
         res.writeHead(400, `Le champ ${val} n'est pas rempli`);
@@ -136,7 +125,7 @@ function check_exists(val, json) {
 }
 
 async function add_resto(req, res, _, user) {
-    let body = await read_body(req);
+    let body = await outils.read_body(req);
     let json = JSON.parse(body);
 
     if (!(check_exists("nom_resto", json) && check_exists("type_resto", json) && check_exists("adresse", json) &&
@@ -188,7 +177,7 @@ async function get_commentaire(_, res, url, _){
 }
 
 async function add_comment(req, res, _, user){
-    let body = await read_body(req);
+    let body = await outils.read_body(req);
     let json = await JSON.parse(body);
 
     if(!(check_exists("id_resto", json)&&check_exists("commentaire", json))) return;
@@ -210,7 +199,7 @@ async function add_comment(req, res, _, user){
 }
 
 async function suppr_comment(req, res, _, _){
-    let body = await read_body(req);
+    let body = await outils.read_body(req);
     let json = await JSON.parse(body);
 
     if(!(check_exists("id_comment", json))) return;
