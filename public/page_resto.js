@@ -18,6 +18,10 @@ function affiche_commentaire(commentaires){
     let head = document.getElementsByTagName("title");
     head[0].innerHTML = `${commentaires[0].nom.toUpperCase()}` ;
 
+    //modifie le menu
+    let bouton = document.getElementById("bouton_droite");
+    bouton.innerHTML = `<a href="/connexion.html?next=/page_resto.html?id_resto=${id_resto}"> Connexion</a>`
+
     //modifie le titre 
     let titre = document.getElementById("titre");
     titre.innerHTML = `${commentaires[0].nom.toUpperCase()} (${commentaires[0].ville.toUpperCase()})`;
@@ -50,7 +54,6 @@ function affiche_commentaire(commentaires){
         commentaires.forEach(comment => {
             list_comment.innerHTML += `
             <div class="commentaire">
-                <button id="croix" onclick="suppr_comment(${comment.id_comment})"> X </button> 
 				<h3>${comment.username}</h3>
                 ${comment.commentaire}
 			</div>
@@ -65,14 +68,57 @@ async function is_authentification_valid(token) {
     return (r.status === 200);
 }
 
-async function affichage_admin(){
-    let token = get_cookie("Token");
-    let is_auth_valid = await is_authentification_valid(token);
-    if (!token || !is_auth_valid) {
-        return;
+async function affichage_admin(commentaires){
+
+    //modifie title
+    let head = document.getElementsByTagName("title");
+    head[0].innerHTML = `${commentaires[0].nom.toUpperCase()}` ;
+
+    //modifie le menu
+    let bouton = document.getElementById("bouton_droite");
+    bouton.innerHTML = "";
+
+    //modifie le titre 
+    let titre = document.getElementById("titre");
+    titre.innerHTML = `${commentaires[0].nom.toUpperCase()} (${commentaires[0].ville.toUpperCase()})`;
+
+    //affiche un coeur si coup de coeur
+    let emplacement_coeur = document.getElementById("emplacement_coeur");
+    if(commentaires[0].coup_coeur){
+        emplacement_coeur.innerHTML = "<span id='coeur'></span>";
     }
 
+    //affichage de l'adresse, du prix et des commentaires si y'en a... 
     let list_comment = document.getElementById("list_commentaire");
+    list_comment.innerHTML = '';
+
+    list_comment.innerHTML += `
+    <div id="adresse">
+		<h3>ADRESSE</h3>
+		${commentaires[0].adresse}
+	</div>
+    `;
+
+    list_comment.innerHTML += `
+    <div id="prix">
+		<h3>PRIX</h3>
+        ${commentaires[0].prix}
+	</div>
+    `;
+
+    //ajout d'une croix pour supprimer des commentaires
+    if(commentaires[0].commentaire != null){
+        commentaires.forEach(comment => {
+            list_comment.innerHTML += `
+            <div class="commentaire">
+                <button id="croix" onclick="suppr_comment(${comment.id_comment})"> X </button> 
+				<h3>${comment.username.toUpperCase()}</h3>
+                ${comment.commentaire}
+			</div>
+            `;
+        });
+    }
+
     list_comment.innerHTML += `
         <div id="ajout_comment">
 			<label for="commentaire"> Nouveau Commentaire : </label>
@@ -86,8 +132,14 @@ async function affichage_admin(){
 
 async function init(){
     const data = await get_commentaire();
-    affiche_commentaire(data);
-    affichage_admin();
+    let token = get_cookie("Token");
+    let is_auth_valid = await is_authentification_valid(token);
+    if (!token || !is_auth_valid) {
+        affiche_commentaire(data);
+    }
+    else{
+        affichage_admin(data);
+    }
 }
 
 init();

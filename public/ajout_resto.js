@@ -2,7 +2,7 @@
     let token = get_cookie("Token");
     let is_auth_valid = await is_authentification_valid(token);
     if (!token || !is_auth_valid) {
-        location.replace("/connexion.html");
+        location.replace("/connexion.html?next=/ajout_resto.html");
     }
 })()
 

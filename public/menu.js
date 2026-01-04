@@ -13,7 +13,7 @@ function menu_add_resto() {
         location.replace("/ajout_resto.html");
     }
     else {
-        location.replace(`/connexion.html?next=${encodeURI("/ajout_resto.html")}`);
+        location.replace(`/connexion.html?next=/ajout_resto.html`);
     }
 }
 

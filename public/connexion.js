@@ -9,7 +9,7 @@ async function login() {
         document.cookie = "Token=" + token;
 
         let params = new URLSearchParams(location.search);
-        let next = params.get("next") || "/ajout_resto.html";
+        let next = params.get("next") || "/index.html";
         location.replace(next);
     }
     else {
