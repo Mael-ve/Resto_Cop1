@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <meta charset="utf-8"/>
+		<title>Ajout d'un Commentateur</title>
+		<link rel="stylesheet" href="style.css">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
+
+	<body>
+		<h1> LE TRIPADVISOR DES COPAINS </h1>
+		<ul id="menu"> 
+			<li class="sous_menu"><a href = "index.html"> Liste des Restaurants </a> </li>
+            <li class="sous_menu" style="float:right"><a onclick="menu_add_resto()"> Ajouter un Restaurant </a> </li>
+		</ul>
+
+        <div id="form">
+            <h2>Ajout d'un Commentateur</h2>
+
+            <ul id="form_">
+                <li>
+                    <label for="pseudo">Pseudo :</label>
+                    <input type="text" id="pseudo" name="pseudo"/>
+                </li>
+
+                <li>
+                    <label for="mdp">Mot de passe :</label>
+                    <input type="text" id="mdp" name="mdp"/>
+                </li>
+            </ul>
+
+            <button onclick="add_perso()">Ajouter</button>
+
+            <div id="message_erreur"></div>
+        </div>
+        
+        <script type="text/javascript" src="menu.js"></script>
+        <script type="text/javascript" src="add_perso.js"></script>
+    </body>
+</html>

@@ -40,7 +40,8 @@ const ENDPOINTS={
         "/login" : { process: login},
         "/add_resto": { authentification_required: true, process: DB.add_resto },
         "/add_comment": {authentification_required:true, process: DB.add_comment},
-        "/suppr_comment": {authentification_required: true, process: DB.suppr_comment}
+        "/suppr_comment": {authentification_required: true, process: DB.suppr_comment},
+        "/add_perso" : {authentification_required: true, process: DB.add_perso}
     }
 }
 
@@ -211,7 +212,7 @@ const serveur = http.createServer((req, res) => {
 
 DB.init().then(async () => {
     let hash_pwd = await outils.hash_password(MDP_ADMIN);
-    DB.ajout_commmentateur_test(hash_pwd);
+    DB.ajout_super_admin(hash_pwd);
     serveur.listen(PORT, () => console.log(`Serveur démarré au port ${PORT}`));
 }).catch((err)=>{
     console.error(err);

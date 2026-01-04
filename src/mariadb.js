@@ -78,10 +78,54 @@ function query(sql, params) {
     })
 }
 
-async function ajout_commmentateur_test(hash_pwd){
+function check_exists(val, json, res) {
+    if (!json[val]) {
+        res.writeHead(400, `Le champ ${val} n'est pas rempli`);
+        res.end();
+        return false;
+    }
+    return true;
+}
+
+async function ajout_super_admin(hash_pwd){
     // fonction pour mettre un commentateur pour les test de login
-    await conn.query("INSERT INTO commentateurs (username, mdp) VALUES('Malou', ?)", [hash_pwd]);
-    console.log("l'ajout du commentateur test a été fait");
+    let exist_deja = await query("SELECT id FROM commentateurs WHERE id=1")
+    if (!exist_deja[0]){
+        await query("INSERT INTO commentateurs (username, mdp) VALUES('Malou', ?)", [hash_pwd]);
+        console.log("l'ajout du commentateur test a été fait"); 
+    }
+    else{
+        console.log("le superadmin est déjà crée");
+    }
+}
+
+async function add_perso(req, res, _, user){
+
+    if(user.id !== 1){
+        res.writeHead(406, "Vous n'êtes pas superadmin");
+        res.end();
+        return;
+    }
+
+    let body = await outils.read_body(req);
+    let json = await JSON.parse(body);
+
+    if(!(check_exists("pseudo", json, res)&&check_exists("mdp", json, res))) return;
+
+    let hash_pwd = outils.hash_password(json.mdp)
+    
+    try{
+        await conn.query("INSERT INTO commentateurs (username, mdp) VALUES(?, ?)", [json.pseudo.toLowerCase(), hash_pwd]);
+
+        res.writeHead(200);
+        res.end();
+    }
+    catch(error){
+        console.log(error);
+        res.writeHead(406, `${error}`);
+        res.end()
+    }
+
 }
 
 async function get_resto_grille(_, res, url, _){
@@ -115,21 +159,12 @@ async function get_resto_grille(_, res, url, _){
     res.end(JSON.stringify(restaurants));
 }
 
-function check_exists(val, json) {
-    if (!json[val]) {
-        res.writeHead(400, `Le champ ${val} n'est pas rempli`);
-        res.end();
-        return false;
-    }
-    return true;
-}
-
 async function add_resto(req, res, _, user) {
     let body = await outils.read_body(req);
     let json = JSON.parse(body);
 
-    if (!(check_exists("nom_resto", json) && check_exists("type_resto", json) && check_exists("adresse", json) &&
-    check_exists("ville", json) && check_exists("prix", json) && check_exists("commentaire", json) )) return;
+    if (!(check_exists("nom_resto", json, res) && check_exists("type_resto", json, res) && check_exists("adresse", json, res) &&
+    check_exists("ville", json, res) && check_exists("prix", json, res) && check_exists("commentaire", json, res) )) return;
 
     try{
         await query(
@@ -180,7 +215,7 @@ async function add_comment(req, res, _, user){
     let body = await outils.read_body(req);
     let json = await JSON.parse(body);
 
-    if(!(check_exists("id_resto", json)&&check_exists("commentaire", json))) return;
+    if(!(check_exists("id_resto", json, res)&&check_exists("commentaire", json, res))) return;
 
     try{
         await query(
@@ -202,7 +237,7 @@ async function suppr_comment(req, res, _, _){
     let body = await outils.read_body(req);
     let json = await JSON.parse(body);
 
-    if(!(check_exists("id_comment", json))) return;
+    if(!(check_exists("id_comment", json, res))) return;
 
     try{
         await query("DELETE FROM commentaires WHERE id_comment=?", [json.id_comment]);
@@ -224,7 +259,8 @@ async function retourne_identification(username){
 
 module.exports = {
     init,
-    ajout_commmentateur_test,
+    ajout_super_admin,
+    add_perso,
     get_resto_grille,
     add_resto,
     get_commentaire,
