@@ -50,6 +50,7 @@ function affiche_commentaire(commentaires){
         commentaires.forEach(comment => {
             list_comment.innerHTML += `
             <div class="commentaire">
+                <button id="croix" onclick="suppr_comment(${comment.id_comment})"> X </button> 
 				<h3>${comment.username}</h3>
                 ${comment.commentaire}
 			</div>
@@ -107,10 +108,31 @@ async function add_comment(){
     });
 
     if (r.status === 200){
-        document.getElementById("message_erreur").innerText= "Merci d'avoir ajouté un nouveau Commentaire !";
         location.reload();
     }
     else { 
         document.getElementById("message_erreur").innerText = `Impossible d'ajouter un Commentaire: ${r.statusText}`;
+    }
+}
+
+async function suppr_comment(id_comment){
+
+    let token = get_cookie("Token");
+    if(!token){
+        location.replace(`/connexion.html?next=/page_resto.html?id_resto=${id_resto}`);
+        return;
+    }
+
+    let r = await fetch("/api/suppr_comment", {
+        method:"POST", headers: { Authorization: token}, body: JSON.stringify({
+            id_comment
+        })
+    })
+
+    if(r.status === 200){
+        location.reload();
+    }
+    else{
+        document.getElementById("message_erreur").innerText = `Impossible de supprimer le Commentaire: ${r.statusText}`;
     }
 }

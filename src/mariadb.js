@@ -47,9 +47,11 @@ async function init(){
                         if (err) return reject(err);
                         
                         conn.query(`CREATE TABLE IF NOT EXISTS commentaires (
+                                        id_comment INT NOT NULL AUTO_INCREMENT,
                                         id_resto INT,
                                         id_commentateur INT,
                                         commentaire TEXT DEFAULT NULL,
+                                        PRIMARY KEY (id_comment),
                                         FOREIGN KEY (id_resto) REFERENCES restaurants (id),
                                         FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
                             (err) => {
@@ -153,7 +155,7 @@ async function add_resto(req, res, _, user) {
         )
 
         await query(
-            "INSERT INTO commentaires VALUES(?, ?, ?)",
+            "INSERT INTO commentaires (id_resto, id_commentateur, commentaire) VALUES(?, ?, ?)",
             [id_resto[0].id, user.id, json["commentaire"]]
         );
 
@@ -176,7 +178,7 @@ async function get_commentaire(_, res, url, _){
         return;
     } 
 
-    let commentaires = await query(`SELECT nom, adresse, ville, prix, coup_coeur, commentaire, username
+    let commentaires = await query(`SELECT nom, adresse, ville, prix, coup_coeur, commentaire, username, id_comment
         FROM restaurants INNER JOIN 
         (commentaires INNER JOIN commentateurs ON id_commentateur=commentateurs.id)
         ON id_resto=restaurants.id WHERE id_resto= ?`, [id_resto]);
@@ -193,7 +195,7 @@ async function add_comment(req, res, _, user){
 
     try{
         await query(
-            "INSERT INTO commentaires VALUES(?, ?, ?)",
+            "INSERT INTO commentaires (id_resto, id_commentateur, commentaire) VALUES(?, ?, ?)",
             [json.id_resto, user.id, json.commentaire]
         );
 
@@ -202,8 +204,27 @@ async function add_comment(req, res, _, user){
     }
     catch(error){
         console.log(error);
-        res.writeHead(406, `${error}`)
-        res.end()
+        res.writeHead(406, `${error}`);
+        res.end();
+    }
+}
+
+async function suppr_comment(req, res, _, _){
+    let body = await read_body(req);
+    let json = await JSON.parse(body);
+
+    if(!(check_exists("id_comment", json))) return;
+
+    try{
+        await query("DELETE FROM commentaires WHERE id_comment=?", [json.id_comment]);
+        
+        res.writeHead(200);
+        res.end();
+    }
+    catch(error){
+        console.log(error);
+        res.writeHead(406, `${error}`);
+        res.end();
     }
 }
 
@@ -219,5 +240,6 @@ module.exports = {
     add_resto,
     get_commentaire,
     add_comment,
+    suppr_comment,
     retourne_identification,
 };

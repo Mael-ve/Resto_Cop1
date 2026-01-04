@@ -39,7 +39,8 @@ const ENDPOINTS={
     "POST": {
         "/login" : { process: login},
         "/add_resto": { authentification_required: true, process: DB.add_resto },
-        "/add_comment": {authentification_required:true, process: DB.add_comment}
+        "/add_comment": {authentification_required:true, process: DB.add_comment},
+        "/suppr_comment": {authentification_required: true, process: DB.suppr_comment}
     }
 }
 
