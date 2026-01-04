@@ -91,7 +91,7 @@ async function ajout_super_admin(hash_pwd){
     // fonction pour mettre un commentateur pour les test de login
     let exist_deja = await query("SELECT id FROM commentateurs WHERE id=1")
     if (!exist_deja[0]){
-        await query("INSERT INTO commentateurs (username, mdp) VALUES('Malou', ?)", [hash_pwd]);
+        await query("INSERT INTO commentateurs (username, mdp) VALUES('malou', ?)", [hash_pwd]);
         console.log("l'ajout du commentateur test a été fait"); 
     }
     else{
@@ -112,7 +112,7 @@ async function add_perso(req, res, _, user){
 
     if(!(check_exists("pseudo", json, res)&&check_exists("mdp", json, res))) return;
 
-    let hash_pwd = outils.hash_password(json.mdp)
+    let hash_pwd = await outils.hash_password(json.mdp)
     
     try{
         await conn.query("INSERT INTO commentateurs (username, mdp) VALUES(?, ?)", [json.pseudo.toLowerCase(), hash_pwd]);
@@ -253,7 +253,7 @@ async function suppr_comment(req, res, _, _){
 }
 
 async function retourne_identification(username){
-    let r = await query("SELECT id, mdp FROM commentateurs WHERE username = ?", [username])
+    let r = await query("SELECT id, mdp FROM commentateurs WHERE username = ?", [username.toLowerCase()])
     return r;
 }
 
