@@ -33,6 +33,7 @@ ul#menu {
     position: sticky;	
     top:10px;
     width:100%;
+    z-index: 50;
 }
 
 li.sous_menu{ 	 float:left;
