@@ -14,6 +14,5 @@ Ensuite à l'aide de docker (à installer) il faut lancer la commande :
 
 L'utilisateur peut aussi mettre des valeurs différentes dans le fichier .env pour les constantes : ```SECRET_KEY```, ```SALT``` et ```MDP_ADMIN```
 
-La configuration actuelle utilisant le module nodemon, il n'est pas nécéssaire de supprimer les contenaires après chaque modification des fichiers coté serveur. 
 
 
