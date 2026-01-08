@@ -1,10 +1,10 @@
 function showResponsiveMenu() {
-  let menu = document.getElementById("list-filtre");
-  if (menu.className === "") {
-    menu.className = "open";
-  } else {
-    menu.className = "";                    
-  }
+	let menu = document.getElementById("list-filtre");
+	if (menu.className === "") {
+		menu.className = "open";
+	} else {
+		menu.className = "";                    
+	}
 }
 
 function menu_add_resto() {
@@ -15,6 +15,20 @@ function menu_add_resto() {
     else {
         location.replace(`/connexion.html?next=/ajout_resto.html`);
     }
+}
+
+async function menu_filtre(){
+	let r = await fetch("/api/get_ville");
+	let data = await r.json();
+
+	let emplacement = document.getElementById("ville");
+	
+	data.forEach(elem => {
+		emplacement.innerHTML += `
+			<label for="${elem.ville}">${elem.ville.toUpperCase()}</label>
+			<input type="checkbox" id="${elem.ville}"name="${elem.ville}" value="unchecked" unchecked/>
+		`;
+	});
 }
 
 function get_cookie(name) {

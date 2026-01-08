@@ -34,7 +34,8 @@ const ENDPOINTS={
     "GET": {
         "/me": {authentification_required  : true, process: api_me},
         "/get_resto": {authentification_required : false, process: DB.get_resto_grille},
-        "/get_commentaire": {authentification_required: false, process: DB.get_commentaire}
+        "/get_commentaire": {authentification_required: false, process: DB.get_commentaire},
+        "/get_ville":{authentification_required: false, process: DB.get_ville}
     },
     "POST": {
         "/login" : { process: login},
