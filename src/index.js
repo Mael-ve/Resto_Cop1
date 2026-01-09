@@ -218,3 +218,12 @@ DB.init().then(async () => {
     console.error(err);
     process.exit(1);
 });
+
+const gracefulShutdown = () => {
+    DB.teardown()
+        .catch(() => {})
+        .then(() => process.exit());
+};
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);

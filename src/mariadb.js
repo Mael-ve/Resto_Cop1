@@ -257,6 +257,15 @@ async function retourne_identification(username){
     return r;
 }
 
+async function teardown() {
+    return new Promise((acc, rej) => {
+        conn.end(err => {
+            if (err) rej(err);
+            else acc();
+        });
+    });
+}
+
 module.exports = {
     init,
     ajout_super_admin,
@@ -267,4 +276,5 @@ module.exports = {
     add_comment,
     suppr_comment,
     retourne_identification,
+    teardown,
 };
