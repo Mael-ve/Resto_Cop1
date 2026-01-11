@@ -10,7 +10,7 @@ async function init(){
     await waitPort({ 
         host: process.env.MARIADB_HOST, 
         port: 3306,
-        timeout: 10000,
+        timeout: 100000,
         waitForDns: true,
     });
 
@@ -92,7 +92,7 @@ async function ajout_super_admin(hash_pwd){
     let exist_deja = await query("SELECT id FROM commentateurs WHERE id=1")
     if (!exist_deja[0]){
         await query("INSERT INTO commentateurs (username, mdp) VALUES('malou', ?)", [hash_pwd]);
-        console.log("l'ajout du commentateur test a été fait"); 
+        console.log("l'ajout du superadmin a été fait"); 
     }
     else{
         console.log("le superadmin est déjà crée");
