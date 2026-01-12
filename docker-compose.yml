@@ -3,7 +3,8 @@ services:
     build: .
     ports:
       - ${PORT}:${PORT}
-    volumes: []
+    volumes:
+      - .:/Site
     environment:
       MARIADB_HOST: mariadb
       MARIADB_USER: root
