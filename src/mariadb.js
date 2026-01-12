@@ -207,6 +207,22 @@ async function get_ville(_, res, _, _){
     }
 }
 
+async function get_resto_unique(_, res, url, _){
+    let id_resto = url.searchParams.get("id_resto");
+
+    if(!id_resto){
+        res.writeHead(400, "Aucun resto n'est précisé");
+        res.end();
+        return;
+    } 
+
+    let info = await query(`SELECT nom, adresse, ville, prix, coup_coeur
+        FROM restaurants WHERE restaurants.id= ?`, [id_resto]);
+
+    res.writeHead(200);
+    res.end(JSON.stringify(info));
+}
+
 async function get_commentaire(_, res, url, _){
     let id_resto = url.searchParams.get("id_resto");
 
@@ -216,7 +232,7 @@ async function get_commentaire(_, res, url, _){
         return;
     } 
 
-    let commentaires = await query(`SELECT nom, adresse, ville, prix, coup_coeur, commentaire, username, id_comment
+    let commentaires = await query(`SELECT commentaire, username, id_comment
         FROM restaurants INNER JOIN 
         (commentaires INNER JOIN commentateurs ON id_commentateur=commentateurs.id)
         ON id_resto=restaurants.id WHERE id_resto= ?`, [id_resto]);
@@ -287,6 +303,7 @@ module.exports = {
     get_resto_grille,
     add_resto,
     get_ville,
+    get_resto_unique,
     get_commentaire,
     add_comment,
     suppr_comment,
