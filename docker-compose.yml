@@ -3,8 +3,7 @@ services:
     build: .
     ports:
       - ${PORT}:${PORT}
-    volumes:
-      - .:/Site
+    volumes: []
     environment:
       MARIADB_HOST: mariadb
       MARIADB_USER: root
@@ -14,9 +13,9 @@ services:
       - mariadb
 
   mariadb:
-    image: mariadb:12
+    image: mariadb:10.11
     volumes:
-      - db_site:/var/lib/mariadb
+      - db_site:/var/lib/mysql
     environment:
       MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
