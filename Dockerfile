@@ -4,10 +4,12 @@ WORKDIR /Site
 
 COPY package*.json ./
 
+RUN npm install -g nodemon
 RUN npm install
 
 COPY . .
 
 EXPOSE 8000
 
-CMD ["node", "src/index.js"]
+ENTRYPOINT ["nodemon", "src/index.js"] 
+CMD ["npm", "run", "dev"]
