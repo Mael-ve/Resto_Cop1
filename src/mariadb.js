@@ -170,7 +170,7 @@ async function add_resto(req, res, _, user) {
         await query(
             "INSERT INTO restaurants (nom, type_resto, adresse, ville, id_commentateur, coup_coeur, prix, date_ajout) VALUES(?, ?, ?, ?, ?, ?, ?, now())"
             , [json.nom_resto.toLowerCase(), json.type_resto.toLowerCase(), json.adresse, json.ville.toLowerCase(),
-            user.id, json.coup_coeur, json.prix.toLowerCase()]
+            user.id, json.coup_coeur, json.prix]
         );
 
         let id_resto = await query(
