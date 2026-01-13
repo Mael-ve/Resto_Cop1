@@ -195,7 +195,7 @@ async function add_resto(req, res, _, user) {
 
 async function get_ville(_, res, _, _){
     try{
-        let villes = await query("SELECT ville FROM restaurants");
+        let villes = await query("SELECT DISTINCT(ville) FROM restaurants");
 
         res.writeHead(200);
         res.end(JSON.stringify(villes));
