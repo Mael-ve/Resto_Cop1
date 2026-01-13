@@ -227,12 +227,14 @@ const gracefulShutdown = () => {
         .then(() => process.exit());
 };
 
-const relaunch = DB.init().then(async () => {
-    serveur.listen(PORT, () => console.log(`Serveur démarré au port ${PORT}`));
-}).catch((err)=>{
-    console.error(err);
-    process.exit(1);
-});
+const relaunch = () => {
+    DB.init().then(async () => {
+        serveur.listen(PORT, () => console.log(`Serveur démarré au port ${PORT}`));
+    }).catch((err)=>{
+        console.error(err);
+        process.exit(1);
+    });
+} 
 
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
