@@ -154,9 +154,9 @@ async function authentification(req) {
 
     try {
         let { id, username, exp} = await jwtVerifyAsync(token, SECRET_KEY);
-        if (Date.now() > exp){
-            return null;
-        }
+        //if (Date.now() > exp){
+        //    return null;
+        //}
         return { id, username };
     } catch (error) {
         return null;

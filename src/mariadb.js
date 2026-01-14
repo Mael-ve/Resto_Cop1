@@ -156,7 +156,7 @@ async function get_resto_grille(_, res, url, _){
         }
     }
 
-    requete += "ORDER BY date_ajout DESC LIMIT 10";
+    requete += "ORDER BY date_ajout DESC LIMIT 20";
 
     let restaurants = await query(requete, [ville]);
 
