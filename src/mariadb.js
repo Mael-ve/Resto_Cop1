@@ -1,9 +1,9 @@
 const waitPort = require('wait-port');
 const fs = require('fs');
-const mariadb = require('mariadb/callback');
+const mariadb = require('mariadb');
 
 const outils = require("./outils.js")
-let conn;
+let pool;
 
 async function init(){
 
@@ -14,68 +14,73 @@ async function init(){
         waitForDns: true,
     });
 
-    conn = mariadb.createConnection({
-        host: process.env.MARIADB_HOST,
-        user: process.env.MARIADB_USER,
-        password: process.env.MARIADB_PASSWORD,
-        database: process.env.MARIADB_DB
+    pool = mariadb.createPool({
+    host: process.env.MARIADB_HOST,
+    user: process.env.MARIADB_USER,
+    password: process.env.MARIADB_PASSWORD,
+    database: process.env.MARIADB_DB,
+    connectionLimit: 5,
+    idleTimeout: 60000,
+    acquireTimeout: 10000
     });
 
-    return new Promise((resolve, reject) => {
-        conn.query(
-            `CREATE TABLE IF NOT EXISTS commentateurs(
-                id INT NOT NULL AUTO_INCREMENT,
-                username VARCHAR(50),
-                lien_tete VARCHAR(255) DEFAULT NULL,
-                mdp VARCHAR(255),
-                PRIMARY KEY(id) )`,
-            (err) => {
-                if (err) return reject(err);
+    return await pool.query(
+        `CREATE TABLE IF NOT EXISTS commentateurs(
+            id INT NOT NULL AUTO_INCREMENT,
+            username VARCHAR(50),
+            lien_tete VARCHAR(255) DEFAULT NULL,
+            mdp VARCHAR(255),
+            PRIMARY KEY(id) )`,
+        (err) => {
+            if (err) return reject(err);
 
-                conn.query(`CREATE TABLE IF NOT EXISTS restaurants (
-                                id INT NOT NULL AUTO_INCREMENT,
-                                nom VARCHAR(255),
-                                type_resto VARCHAR(255),
-                                adresse VARCHAR(255),
-                                ville VARCHAR(255),
-                                id_commentateur INT(255), 
-                                coup_coeur BOOL,
-                                prix TEXT DEFAULT NULL,
-                                date_ajout DATETIME, 
-                                PRIMARY KEY (id),
-                                FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
-                    (err) => {
-                        if (err) return reject(err);
-                        
-                        conn.query(`CREATE TABLE IF NOT EXISTS commentaires (
-                                        id_comment INT NOT NULL AUTO_INCREMENT,
-                                        id_resto INT,
-                                        id_commentateur INT,
-                                        commentaire TEXT DEFAULT NULL,
-                                        PRIMARY KEY (id_comment),
-                                        FOREIGN KEY (id_resto) REFERENCES restaurants (id),
-                                        FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
-                            (err) => {
-                                if (err) return reject(err);
+            pool.query(`CREATE TABLE IF NOT EXISTS restaurants (
+                            id INT NOT NULL AUTO_INCREMENT,
+                            nom VARCHAR(255),
+                            type_resto VARCHAR(255),
+                            adresse VARCHAR(255),
+                            ville VARCHAR(255),
+                            id_commentateur INT(255), 
+                            coup_coeur BOOL,
+                            prix TEXT DEFAULT NULL,
+                            date_ajout DATETIME, 
+                            PRIMARY KEY (id),
+                            FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
+                (err) => {
+                    if (err) return reject(err);
+                    
+                    pool.query(`CREATE TABLE IF NOT EXISTS commentaires (
+                                    id_comment INT NOT NULL AUTO_INCREMENT,
+                                    id_resto INT,
+                                    id_commentateur INT,
+                                    commentaire TEXT DEFAULT NULL,
+                                    PRIMARY KEY (id_comment),
+                                    FOREIGN KEY (id_resto) REFERENCES restaurants (id),
+                                    FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
+                        (err) => {
+                            if (err) return reject(err);
 
-                                console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
-                                resolve();
-                            }
-                        );
-                    }
-                );
-            }
-        ); 
-    });
+                            console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
+                            resolve();
+                        }
+                    );
+                }
+            );
+        }
+    ); 
 }
 
-function query(sql, params) {
-    return new Promise((resolve, reject) => {
-        conn.query(sql, params, (error, results) => {
-            if (error) return reject(error);
-            resolve(results);
-        });
-    })
+async function query(sql, params) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        return await conn.query(sql, params);
+    } catch (err) {
+        console.error("DB error:", err);
+        throw err;
+    } finally {
+        if (conn) conn.release();
+    }
 }
 
 function check_exists(val, json, res) {
@@ -115,15 +120,15 @@ async function add_perso(req, res, _, user){
     let hash_pwd = await outils.hash_password(json.mdp)
     
     try{
-        await conn.query("INSERT INTO commentateurs (username, mdp) VALUES(?, ?)", [json.pseudo.toLowerCase(), hash_pwd]);
+        await query("INSERT INTO commentateurs (username, mdp) VALUES(?, ?)", [json.pseudo.toLowerCase(), hash_pwd]);
 
         res.writeHead(200);
         res.end();
     }
     catch(error){
         console.log(error);
-        res.writeHead(406, `${error}`);
-        res.end()
+        res.writeHead(500);
+        res.end("Erreur serveur");
     }
 
 }
@@ -188,8 +193,8 @@ async function add_resto(req, res, _, user) {
     }
     catch(error){
         console.log(error);
-        res.writeHead(406, `Ce restaurant existe peut-être déjà`);
-        res.end();
+        res.writeHead(500);
+        res.end("Erreur serveur");
     }
 }
 
@@ -202,8 +207,8 @@ async function get_ville(_, res, _, _){
     }
     catch(error){
         console.log(error);
-        res.writeHead(406, `${error}`);
-        res.end();
+        res.writeHead(500);
+        res.end("Erreur serveur");
     }
 }
 
@@ -258,8 +263,8 @@ async function add_comment(req, res, _, user){
     }
     catch(error){
         console.log(error);
-        res.writeHead(406, `${error}`);
-        res.end();
+        res.writeHead(500);
+        res.end("Erreur serveur");
     }
 }
 
@@ -277,8 +282,8 @@ async function suppr_comment(req, res, _, _){
     }
     catch(error){
         console.log(error);
-        res.writeHead(406, `${error}`);
-        res.end();
+        res.writeHead(500);
+        res.end("Erreur serveur");
     }
 }
 
