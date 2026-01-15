@@ -2,7 +2,7 @@ const waitPort = require('wait-port');
 const fs = require('fs');
 const mariadb = require('mariadb');
 
-const outils = require("./outils.js")
+const outils = require("./outils.js");
 let pool;
 
 async function init(){
@@ -24,50 +24,37 @@ async function init(){
     acquireTimeout: 10000
     });
 
-    return await pool.query(
+    await pool.query(
         `CREATE TABLE IF NOT EXISTS commentateurs(
             id INT NOT NULL AUTO_INCREMENT,
             username VARCHAR(50),
             lien_tete VARCHAR(255) DEFAULT NULL,
             mdp VARCHAR(255),
-            PRIMARY KEY(id) )`,
-        (err) => {
-            if (err) return reject(err);
+            PRIMARY KEY(id) )`);
+    
+    await pool.query(`CREATE TABLE IF NOT EXISTS restaurants (
+                    id INT NOT NULL AUTO_INCREMENT,
+                    nom VARCHAR(255),
+                    type_resto VARCHAR(255),
+                    adresse VARCHAR(255),
+                    ville VARCHAR(255),
+                    id_commentateur INT(255), 
+                    coup_coeur BOOL,
+                    prix TEXT DEFAULT NULL,
+                    date_ajout DATETIME, 
+                    PRIMARY KEY (id),
+                    FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`);
 
-            pool.query(`CREATE TABLE IF NOT EXISTS restaurants (
-                            id INT NOT NULL AUTO_INCREMENT,
-                            nom VARCHAR(255),
-                            type_resto VARCHAR(255),
-                            adresse VARCHAR(255),
-                            ville VARCHAR(255),
-                            id_commentateur INT(255), 
-                            coup_coeur BOOL,
-                            prix TEXT DEFAULT NULL,
-                            date_ajout DATETIME, 
-                            PRIMARY KEY (id),
-                            FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
-                (err) => {
-                    if (err) return reject(err);
-                    
-                    pool.query(`CREATE TABLE IF NOT EXISTS commentaires (
-                                    id_comment INT NOT NULL AUTO_INCREMENT,
-                                    id_resto INT,
-                                    id_commentateur INT,
-                                    commentaire TEXT DEFAULT NULL,
-                                    PRIMARY KEY (id_comment),
-                                    FOREIGN KEY (id_resto) REFERENCES restaurants (id),
-                                    FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`,
-                        (err) => {
-                            if (err) return reject(err);
+    await pool.query(`CREATE TABLE IF NOT EXISTS commentaires (
+                    id_comment INT NOT NULL AUTO_INCREMENT,
+                    id_resto INT,
+                    id_commentateur INT,
+                    commentaire TEXT DEFAULT NULL,
+                    PRIMARY KEY (id_comment),
+                    FOREIGN KEY (id_resto) REFERENCES restaurants (id),
+                    FOREIGN KEY (id_commentateur) REFERENCES commentateurs (id) )`);
 
-                            console.log(`Connected to mysql db at host ${process.env.MARIADB_HOST}`);
-                            resolve();
-                        }
-                    );
-                }
-            );
-        }
-    ); 
+    console.log("Les tables sont bien initialisés");
 }
 
 async function query(sql, params) {
@@ -268,6 +255,43 @@ async function add_comment(req, res, _, user){
     }
 }
 
+async function get_comment_by_id(_, res, url, _){
+    let id_comment = url.searchParams.get("id");
+
+    if(!id_comment){
+        res.writeHead(400, "Aucun commentaire précisé")
+        res.end();
+        return;
+    }
+
+    let comment = await query(`SELECT commentaire, username
+        FROM commentaires 
+        INNER JOIN commentateurs ON id_commentateur= commentateurs.id
+        WHERE id_comment = ?`, [id_comment]);
+    
+    res.writeHead(200);
+    res.end(JSON.stringify(comment));
+}
+
+async function update_comment(req, res, _, _){
+    let body = await outils.read_body(req);
+    let json = await JSON.parse(body);
+
+    if(!(check_exists("id_comment", json, res)&&check_exists("commentaire", json, res))) return;
+
+    try{
+        await query("UPDATE commentaires SET commentaire = ? WHERE id_comment = ?", [json.commentaire, json.id_comment]);
+        
+        res.writeHead(200);
+        res.end();
+    }
+    catch(error){
+        console.log(error);
+        res.writeHead(500);
+        res.end("Erreur serveur");
+    }
+}
+
 async function suppr_comment(req, res, _, _){
     let body = await outils.read_body(req);
     let json = await JSON.parse(body);
@@ -311,6 +335,8 @@ module.exports = {
     get_resto_unique,
     get_commentaire,
     add_comment,
+    get_comment_by_id,
+    update_comment,
     suppr_comment,
     retourne_identification,
     teardown,

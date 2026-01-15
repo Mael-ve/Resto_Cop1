@@ -121,6 +121,7 @@ async function affichage_admin(info_resto, commentaires){
                 list_comment.innerHTML += `
                 <div class="commentaire">
                     <button id="croix" onclick="suppr_comment(${comment.id_comment})"> X </button> 
+                    <button id="crayon" onclick="edit_comment(${comment.id_comment}, this.closest('.commentaire'))"> &#9998 </button>
                     <h3>${comment.username.toUpperCase()}</h3>
                     ${comment.commentaire}
                 </div>
@@ -197,5 +198,49 @@ async function suppr_comment(id_comment){
     }
     else{
         document.getElementById("message_erreur").innerText = `Impossible de supprimer le Commentaire: ${r.statusText}`;
+    }
+}
+
+async function edit_comment(id_comment, div_comment) {
+
+   let token = get_cookie("Token");
+    if(!token){
+        location.replace(`/connexion.html?next=/page_resto.html?id_resto=${id_resto}`);
+        return;
+    }
+
+    const reponse = await fetch(`/api/get_comment_by_id?id=${id_comment}`);
+    const comment = await reponse.json();
+
+    div_comment.innerHTML =`
+            <h3>${comment[0].username.toUpperCase()}</h3>
+            <label for="update_commentaire"> Nouveau Commentaire : </label>
+            <textarea id="update_commentaire" name="update_commentaire">
+            ${comment[0].commentaire}
+            </textarea>
+            <button onclick="update_comment(${id_comment})">Publier le commentaire</button>
+        `;
+}
+
+async function update_comment(id_comment) {
+    const commentaire = document.getElementById("update_commentaire").value;
+
+    let token = get_cookie("Token");
+    if (!token) {
+        location.replace(`/connexion.html?next=/page_resto.html?id_resto=${id_resto}`);
+        return;
+    }
+
+    let r = await fetch("/api/update_comment", {
+        method: "POST", headers: { Authorization: token }, body: JSON.stringify({
+            id_comment, commentaire
+        }),
+    });
+
+    if (r.status === 200){
+        location.reload();
+    }
+    else { 
+        document.getElementById("message_erreur").innerText = `Impossible d'ajouter un Commentaire: ${r.statusText}`;
     }
 }

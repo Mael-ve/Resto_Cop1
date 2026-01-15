@@ -36,14 +36,16 @@ const ENDPOINTS={
         "/get_resto": {authentification_required : false, process: DB.get_resto_grille},
         "/get_resto_unique": {authentification_required : false, process: DB.get_resto_unique},
         "/get_commentaire": {authentification_required: false, process: DB.get_commentaire},
-        "/get_ville":{authentification_required: false, process: DB.get_ville}
+        "/get_ville":{authentification_required: false, process: DB.get_ville},
+        "/get_comment_by_id":{authentification_required: false, process: DB.get_comment_by_id}
     },
     "POST": {
         "/login" : { process: login},
         "/add_resto": { authentification_required: true, process: DB.add_resto },
         "/add_comment": {authentification_required:true, process: DB.add_comment},
         "/suppr_comment": {authentification_required: true, process: DB.suppr_comment},
-        "/add_perso" : {authentification_required: true, process: DB.add_perso}
+        "/add_perso" : {authentification_required: true, process: DB.add_perso},
+        "/update_comment" : {authentification_required: true, process: DB.update_comment}
     }
 }
 
